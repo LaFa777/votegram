@@ -1,0 +1,7 @@
+TOKEN = ""
+
+LOG_DIR = ""
+
+SOCKS_URL = ""
+SOCKS_USER = ""
+SOCKS_PASS = ""
