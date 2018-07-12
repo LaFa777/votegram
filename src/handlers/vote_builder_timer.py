@@ -7,37 +7,12 @@ class VoteBuilderTimerConversationHandler(BuilderHandler):
         self.dispatcher()
 
     def choose_time(self, bot, update):
-        time_start
+        # login parse <, >
 
-        # TODO: вынести в отдельный класс рендер
-        # self.render.choose_time(bot, update)
-        # create button's menu
-        keyboard = [[
-            InlineKeyboardButton(
-                text="<",
-                callback_data=,
-            ),
-            InlineKeyboardButton(
-                text=time_start,
-            ),
-            InlineKeyboardButton(
-                text=">",
-                callback_data=,
-            ),
-        ], [
-            InlineKeyboardButton(
-                text="okay",
-                callback_data=,
-            ),
-        ]]
-        keyboard.append([InlineKeyboardButton(
-                    text=cls.get_description(),
-                    callback_data=hash_inline_builder(cls))])
-
-        bot.send_message()
+        render.show()
 
     @staticmethod
-    def _hash_inline_btn
+    def _hash_inline_btn(str):
 
     @classmethod
     def get_description(cls):
