@@ -1,5 +1,6 @@
 from .handlers import (
-    DefaultConversationHandler
+    DefaultConversationHandler,
+    VoteBuilderChooseConversationHandler
 )
 
 
@@ -9,8 +10,10 @@ class Application:
         self.handlers = []
 
     def run(self):
-        self.handlers.append(
-            DefaultConversationHandler(self.updater.dispatcher))
+        dp = self.updater.dispatcher
+
+        self.handlers.append(DefaultConversationHandler(dp))
+        self.handlers.append(VoteBuilderChooseConversationHandler(dp))
 
         # Start the Bot
         self.updater.start_polling()
