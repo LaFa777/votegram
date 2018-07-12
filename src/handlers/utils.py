@@ -10,8 +10,11 @@ def hash_str(s):
 
 
 def hash_inline_builder(cls):
+    """Формирует строку типа `operation:start_building:hash_str:empty_19_byte`
+    , где `empty_19_byte` это пустое пространство, которое можно использовать
+    под свои нужды.
+    """
     if not issubclass(cls, BuilderHandler):
         raise ValueError("'cls' is not 'BuilderHandler' type")
 
-    # type:builder:hash_str
-    return "t:b:{}".format(hash_str(cls.__name__))
+    return "t:b:{}:".format(hash_str(cls.__name__))

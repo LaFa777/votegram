@@ -21,6 +21,8 @@ class VoteBuilderChooseConversationHandler(Handler):
         self.dispatcher.add_handler(CommandHandler("start", self.start))
 
     def start(self, bot, update):
+        # TODO: вынести в отдельный класс рендер
+        # self.render.start(bot, update)
         # create button's menu
         keyboard = []
         for cls in builders:
