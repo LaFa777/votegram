@@ -1,3 +1,5 @@
+import enum
+
 from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -10,28 +12,57 @@ from telegram.ext import (
 
 from ..handlers import (
     Handler,
-    builders,
-    hash_inline_builder,
+    Hasher,
+    CallbackDataSerializer,
 )
 
+from .vote_builder_timer import VoteBuilderTimerConversationHandler
 
-class VoteBuilderChooseConversationHandler(Handler):
+__all__ = ("VoteBuilderChooseConversationHandler")
 
-    def bind_handlers(self):
-        self.dispatcher.add_handler(CommandHandler("start", self.start))
+BUILDERS = {
+    "По таймеру": VoteBuilderTimerConversationHandler,
+}
 
-    def start(self, bot, update):
-        # TODO: вынести в отдельный класс рендер
-        # self.render.start(bot, update)
+
+class OPERATION(enum.Enum):
+    START_BUILDING = 1
+
+
+class Render(object):
+
+    @staticmethod
+    def start(bot, update):
         # create button's menu
         keyboard = []
-        for cls in builders:
-            keyboard.append([InlineKeyboardButton(
-                    text=cls.get_description(),
-                    callback_data=hash_inline_builder(cls))])
+        for desc, cls in BUILDERS.items():
+
+            serializer = CallbackDataSerializer(cls)
+            callback_data = serializer.get_str(OPERATION.START_BUILDING)
+
+            button = InlineKeyboardButton(
+                text=desc,
+                callback_data=callback_data)
+
+            keyboard.append([button, ])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         bot.send_message(chat_id=update.message.chat_id,
                          text="Выберите тип голосования:",
                          reply_markup=reply_markup)
+
+
+class VoteBuilderChooseConversationHandler(Handler):
+
+    def __init__(self,
+                 dispatcher,
+                 render=Render):
+        super().__init__(dispatcher)
+        self._render = render
+
+    def bind_handlers(self):
+        self._dispatcher.add_handler(CommandHandler("start", self.start))
+
+    def start(self, bot, update):
+        self._render.start(bot, update)

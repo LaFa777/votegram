@@ -14,34 +14,85 @@ class VoteStatus(Enum):
 class VoteEntity(metaclass=ABCMeta):
 
     @abstractproperty
-    def id(self):
+    def _bot(self):
         pass
 
     @abstractproperty
-    def status(self):
+    def _id(self):
         pass
 
-    def __init__(self, id, creator_id, chat_id, message_id, status):
-        self.id = id
-        self.status = status or VoteStatus.CLOSE
-        self.creator_id = creator_id
-        self.chat_id = [chat_id]
-        self.message_ids = [message_id]
-        self.date_start = time()
-        self.answers = []
+    @abstractproperty
+    def _status(self):
+        pass
 
-    def add_answer(self, index, user_id):
+    @abstractproperty
+    def _creator_id(self):
+        pass
 
-    def send_pending_msg(self, bot, update):
-        # вместо кнопок отображает мол пока низзя голосовать
+    @abstractproperty
+    def _chat_id(self):
+        pass
+
+    @abstractproperty
+    def _message_ids(self):
+        pass
+
+    @abstractproperty
+    def _date_start(self):
+        pass
+
+    @abstractmethod
+    def add_answer(self, update):
+        pass
+
+    # def vote(self, )
+
+    @abstractmethod
+    def update(self, update):
+        self._render.update(update)
         pass
 
     def open(self, bot, update):
+        self._status = VoteStatus.OPEN
+        self._render.update()
 
     def close(self, bot, update):
+        self._status = VoteStatus.CLOSE
+        self._render.update()
 
 
-class VoteManager(metaclass=ABCMeta):
+class VoteEntityLimit(VoteEntity):
+
+    def __init__(self,
+                 id,
+                 creator_id,
+                 chat_id,
+                 message_id,
+                 status=VoteStatus.CLOSE):
+        self._id = id
+        self._status = status or VoteStatus.CLOSE
+        self._creator_id = creator_id
+        self._chat_id = [chat_id]
+        self._message_ids = [message_id]
+        self._date_start = time()
+        self._answers = []
+
+    def add_answer(self, update):
+        user_id, answer = self._parser.parse(update)
+
+        ########## добавление в память
+        # self._render.add_answer(self._answers)
+
+
+class VoteEntityLimitParser(object):
+
+    @staticmethod
+    def add_answer(update):
+        ######### код сюда быра
+        return answer_index, user_id
+
+
+class VoteManager(object):
 
     def create(self):
         """Возвращает
@@ -53,16 +104,28 @@ class VoteManager(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def get_actives(self):
-        """Возвращает `List[VoteEntity]` со стасуом OPEN
-        """
-        raise NotImplementedError
+    # def get_actives(self):
+    #     """Возвращает `List[VoteEntity]` со стасуом OPEN
+    #     """
+    #     raise NotImplementedError
 
 
-class VoteManagerMemory(VoteManager):
+class VoteManagerInMemory(VoteManager):
 
     def __init__(self):
-        self.votes = []
+        self._votes = []
+        self._id = 0
 
-    def create(self):
+    def create(self, bot):
+        self._id += 1
+
         return
+
+    def get(self, id):
+        return self._votes[id]
+
+
+class VoteMessageParser(object):
+
+    def parse_answer(self, update):
+        pass

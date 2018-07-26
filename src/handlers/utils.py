@@ -1,6 +1,5 @@
 import hashlib
-
-from .core import BuilderHandler
+import enum
 
 
 def hash_str(s):
@@ -9,12 +8,22 @@ def hash_str(s):
     return hashlib.sha1(s.encode('utf-8')).hexdigest()
 
 
-def hash_inline_builder(cls):
-    """Формирует строку типа `operation:start_building:hash_str:empty_19_byte`
-    , где `empty_19_byte` это пустое пространство, которое можно использовать
-    под свои нужды.
-    """
-    if not issubclass(cls, BuilderHandler):
-        raise ValueError("'cls' is not 'BuilderHandler' type")
+class CallbackDataSerializer(object):
 
-    return "t:b:{}:".format(hash_str(cls.__name__))
+    def __init__(self, cls):
+        self._cls = cls
+
+    def get_str(self, operation, vote_id=None):
+        self.__class__._get_str(self._cls, operation, vote_id)
+
+    # NOTE: DEPRECATED
+    @staticmethod
+    def _get_str(cls, operation, vote_id=None):
+
+        if operation is not enum.Enum:
+            raise ValueError("'operation' is not 'TypeOperation' type")
+
+        return "b:{op_id:02}:{cls_hash}:{vote_id}".format(
+            op_id=str(operation.value)[:2],  # обрезаем строку до 2х символов
+            cls_hash=hash_str(cls.__name__),
+            vote_id=vote_id)
