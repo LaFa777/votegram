@@ -1,7 +1,10 @@
 from .handlers import (
     DefaultConversationHandler,
-    VoteBuilderChooseConversationHandler
+    VoteBuilderConversationHandler,
+    VoteBuilderTimerConversationHandler,
 )
+
+from .vote_managers import VoteManagerMemory
 
 
 class Application:
@@ -10,10 +13,16 @@ class Application:
         self.handlers = []
 
     def run(self):
+        vote_manager = VoteManagerMemory()
+
         dp = self.updater.dispatcher
 
         self.handlers.append(DefaultConversationHandler(dp))
-        self.handlers.append(VoteBuilderChooseConversationHandler(dp))
+
+        voteBuilder = VoteBuilderConversationHandler(dp)
+        voteBuilder.add_builder(VoteBuilderTimerConversationHandler(dp),
+                                description="По таймеру")
+        self.handlers.append(voteBuilder)
 
         # Start the Bot
         self.updater.start_polling()

@@ -92,40 +92,6 @@ class VoteEntityLimitParser(object):
         return answer_index, user_id
 
 
-class VoteManager(object):
-
-    def create(self):
-        """Возвращает
-        """
-        raise NotImplementedError
-
-    def get(self, id):
-        """Возвращает соответствующий `VoteEntity`
-        """
-        raise NotImplementedError
-
-    # def get_actives(self):
-    #     """Возвращает `List[VoteEntity]` со стасуом OPEN
-    #     """
-    #     raise NotImplementedError
-
-
-class VoteManagerInMemory(VoteManager):
-
-    def __init__(self):
-        self._votes = []
-        self._id = 0
-
-    def create(self, bot):
-        self._id += 1
-
-        return
-
-    def get(self, id):
-        return self._votes[id]
-
-
-class VoteMessageParser(object):
-
-    def parse_answer(self, update):
-        pass
+#class VoteMessageParser(object):
+#    def parse_answer(self, update):
+#        pass
