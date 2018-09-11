@@ -1,21 +1,61 @@
-import arrow
+import copy
 
-from telegram import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
+import arrow
 
 from telegram.ext import (
     CallbackQueryHandler,
+    #    CommandHandler,
 )
 
 from ..handlers import (
-    BuilderHandler,
-    CallbackDataBuilderV1,
-    CallbackDataParserV1,
+    ConversationHandler,
 )
 
-__all__ = ("VoteBuilderTimerConversationHandler")
+from ..telegram_utils import (
+    Button,
+    ButtonsMenu,
+    Message,
+)
+
+__all__ = ("VoteConversationTimer")
+
+
+class COMMAND:
+    TIMER_DOWN = "TIMER.DOWN"
+    TIMER_UP = "TIMER.UP"
+    TIMER_DONE = "TIMER.DONE"
+
+
+class Render:
+
+    @staticmethod
+    def form_timer(time, show_down=True, show_up=True, x2=False):
+        # TODO: обработка ошибок, когда time не str
+
+        # create keyboard
+        buttonTimeDown = Button(text="<",
+                                command=COMMAND.TIMER_DOWN,
+                                data=time)
+
+        buttonTimeUp = Button(text=">",
+                              command=COMMAND.TIMER_UP,
+                              data=time)
+
+        buttonConfirm = Button(text="далее",
+                               command=COMMAND.TIMER_DONE,
+                               data=time)
+
+        keyboard = ButtonsMenu()
+        keyboard.add_line(buttonTimeDown, buttonConfirm, buttonTimeUp)
+
+        # create human readable time string
+        utc = arrow.utcnow()
+        utc = utc.replace(seconds=int(time))
+        time_str = utc.humanize(locale='ru_ru')
+
+        text = "Окончание голосования через: {}".format(time_str)
+
+        return Message(text, markup=keyboard)
 
 
 class TimeStepper:
@@ -39,158 +79,136 @@ class TimeStepper:
         60 * 60 * 24 * 7 * 4 + 1,
     ]
 
-    @staticmethod
-    def get_default():
+    def get_default(self):
         # TODO: change to 30 min
-        return TimeStepper._TIME_STEPS[2]
+        return str(self._TIME_STEPS[2])
 
-    @staticmethod
-    def step_up(time):
+    def step_up(self, time):
         if isinstance(time, str):
             time = int(time)
 
-        index = TimeStepper._TIME_STEPS.index(time)
-        if (index + 1) >= len(TimeStepper._TIME_STEPS):
-            time = TimeStepper._TIME_STEPS[index]
+        index = self._TIME_STEPS.index(time)
+        if (index + 1) >= len(self._TIME_STEPS):
+            time = self._TIME_STEPS[index]
         else:
-            time = TimeStepper._TIME_STEPS[index + 1]
+            time = self._TIME_STEPS[index + 1]
 
         return str(time)
 
-    @staticmethod
-    def step_down(time):
+    def step_down(self, time):
         if isinstance(time, str):
             time = int(time)
 
-        index = TimeStepper._TIME_STEPS.index(time)
+        index = self._TIME_STEPS.index(time)
         if (index - 1) < 0:
-            time = TimeStepper._TIME_STEPS[index]
+            time = self._TIME_STEPS[index]
         else:
-            time = TimeStepper._TIME_STEPS[index - 1]
+            time = self._TIME_STEPS[index - 1]
 
         return str(time)
 
-    @staticmethod
-    def is_first(time):
-        index = TimeStepper._TIME_STEPS.index(time)
+    def is_first(self, time):
+        index = self._TIME_STEPS.index(time)
         if index == 0:
             return True
         else:
             return False
 
-    @staticmethod
-    def is_last(time):
-        index = TimeStepper._TIME_STEPS.index(time)
-        if (index + 1) == len(TimeStepper._TIME_STEPS):
+    def is_last(self, time):
+        index = self._TIME_STEPS.index(time)
+        if (index + 1) == len(self._TIME_STEPS):
             return True
         else:
             return False
 
 
-class Render:
-
-    def __init__(self, callback_data_builder):
-        self._callback_data_builder = callback_data_builder
-
-    def show_timer(self, bot, update, callback_builder, time):
-        cdata = self._callback_data_builder = callback_data_builder
-
-        # create human readable time string
-        utc = arrow.utcnow()
-        utc = utc.replace(seconds=int(time))
-        time_str = utc.humanize(locale='ru_ru')
-
-        # устанавливаем данные для кнопок
-        cdata.setData(time)
-
-        callback_data = cdata.setCommand("time_down").build()
-        buttonTimeDown = InlineKeyboardButton(
-            text="<",
-            callback_data=callback_data,
-        )
-
-        callback_data = cdata.setCommand("time_up").build()
-        buttonTimeUp = InlineKeyboardButton(
-            text=">",
-            callback_data=callback_data,
-        )
-
-        callback_data = cdata.setCommand("time_confirm").build()
-        buttonConfirm = InlineKeyboardButton(
-            text="okay",
-            callback_data=callback_data,
-        )
-
-        keyboard = InlineKeyboardMarkup([
-            [buttonTimeDown, buttonConfirm, buttonTimeUp],
-            ])
-
-        text = "Окончание голосования через: {}".format(time_str)
-
-        query = update.callback_query.message
-        bot.edit_message_text(chat_id=query.chat_id,
-                              message_id=query.message_id,
-                              text=text,
-                              reply_markup=keyboard)
-
-
-class VoteBuilderTimerConversationHandler(BuilderHandler):
+class VoteConversationTimer(ConversationHandler):
 
     def __init__(self,
                  dispatcher,
-                 callback_data_builder,
-                 callback_data_parser,
-                 render=Render(),
-                 time_stepper=TimeStepper()):
-        self._render = render
-        self._time_stepper = time_stepper
-        self._callback_data_builder = callback_data_builder
-        self._callback_data_parser = callback_data_parser
+                 query_builder,
+                 query_parser):
+        self._query_builder = copy.copy(query_builder)
+        self._query_parser = copy.copy(query_parser)
+        self._time_stepper = TimeStepper()
 
         super().__init__(dispatcher)
 
-    def bind_handlers(self):
-        dp = self._dispatcher
-        cdb = self._callback_data_builder
+    def bind_handlers(self, dispatcher):
+        query = self._query_builder
 
-        pattern = cdb.setCommand("time_down").build()
-        dp.add_handler(CallbackQueryHandler(self.time_down, pattern=pattern))
+        # цепляем обработчик для time_down
+        pattern = query.set_command(COMMAND.TIMER_DOWN).build()
+        handler = CallbackQueryHandler(self.timer_down, pattern=pattern)
+        dispatcher.add_handler(handler)
 
-        pattern = cdb.setCommand("time_up").build()
-        dp.add_handler(CallbackQueryHandler(self.time_up, pattern=pattern))
+        # цепляем обработчик для time_up
+        pattern = query.set_command(COMMAND.TIMER_UP).build()
+        handler = CallbackQueryHandler(self.timer_up, pattern=pattern)
+        dispatcher.add_handler(handler)
 
-    def show_timer(self, bot, update):
+        # цепляем обработчик для time_done
+        pattern = query.set_command(COMMAND.TIMER_DONE).build()
+        handler = CallbackQueryHandler(self.timer_done, pattern=pattern)
+        dispatcher.add_handler(handler)
+
+    def start(self, bot, update):
+        # TODO: добавить параметр inplace и сделать его тут False
+        self.timer_show(bot, update)
+
+    def timer_show(self, bot, update, time=None, inplace=True):
         """Показывает сообщение с выбором времени
         """
         timer = self._time_stepper
 
-        time = timer.get_default()
-        self._render.show_timer(bot, update, self._callback_data_builder, time)
+        if time is None:
+            time = timer.get_default()
 
-    def time_down(self, bot, update):
+        # TODO: добавить логику для показа левой и правой кнопки
+        tg_message = Render()\
+            .form_timer(time).\
+            to_telegram(self._query_builder)
+
+        # TODO: если inplace==False, то отправить отдельным сообщением
+        query = update.callback_query.message
+        bot.edit_message_text(chat_id=query.chat_id,
+                              message_id=query.message_id,
+                              **tg_message)
+
+    def timer_down(self, bot, update):
         timer = self._time_stepper
-        parser = self._callback_data_parser
+        parser = self._query_parser
         query = update.callback_query
 
-        data = parser.getData(query.data)
+        data = parser.get_data(query.data)
         time = timer.step_down(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
         if data == time:
+            # TODO: решить проблему с часами на кнопке
             return
 
-        self._render.show_timer(bot, update, self._callback_data_builder, time)
+        self.timer_show(bot, update, time)
 
-    def time_up(self, bot, update):
+    def timer_up(self, bot, update):
         timer = self._time_stepper
-        parser = self._callback_data_parser
+        parser = self._query_parser
         query = update.callback_query
 
-        data = parser.getData(query.data)
+        data = parser.get_data(query.data)
         time = timer.step_up(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        if data == time:
-            return
+        # if data == time:
+        #    # TODO: решить проблему с часами на кнопке
+        #    return
 
-        self._render.show_timer(bot, update, self._callback_data_builder, time)
+        self.timer_show(bot, update, time)
 
-    def time_confirm()
+    def timer_done(self, bot, update):
+        """Передает посреднику время
+        """
+        parser = self._query_parser
+        query = update.callback_query
+        time = parser.get_data(query.data)
+
+        # передаем данные слушателю
+        self.notify(bot, update, time)

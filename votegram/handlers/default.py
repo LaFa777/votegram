@@ -3,10 +3,10 @@ from telegram.ext import CommandHandler
 from .core import Handler
 
 
-class DefaultConversationHandler(Handler):
+class DefaultHandler(Handler):
 
-    def bind_handlers(self):
-            self._dispatcher.add_handler(CommandHandler('help', self.help))
+    def bind_handlers(self, dispatcher):
+            dispatcher.add_handler(CommandHandler("help", self.help))
 
     def help(self, bot, update):
         bot.send_message(chat_id=update.message.chat_id,

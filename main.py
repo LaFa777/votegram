@@ -4,7 +4,7 @@ from telegram.ext import Updater
 
 import settings
 
-from src import Application
+from votegram import Application
 
 if __name__ == "__main__":
     logging.basicConfig(

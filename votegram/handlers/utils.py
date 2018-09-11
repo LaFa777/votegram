@@ -1,10 +1,13 @@
 import hashlib
 import re
-from inspect import isclass
+#from inspect import isclass
 
 from ..errors import (
     VotegramCallbackDataParseError,
 )
+
+
+__all__ = ("CallbackDataBuilderV1", "CallbackDataParserV1")
 
 
 def hash64(s):
@@ -14,7 +17,33 @@ def hash64(s):
     return "{:x}".format(int(hex, 16) % (10 ** 8))
 
 
-class CallbackDataBuilderV1:
+class BaseQueryBuilderV1:
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self._salt = ""
+        self._command = None
+        self._data = ""
+
+    def set_salt(self, salt):
+        self._salt = salt
+        return self
+
+    def set_command(self, command):
+        self._command = command
+        return self
+
+    def set_data(self, data):
+        if data is not None and len(data) >= 53:
+            raise VotegramCallbackDataParseError
+
+        self._data = data
+        return self
+
+
+class CallbackDataBuilderV1(BaseQueryBuilderV1):
     """Создает строку формата "v:hash:data"
     где:
       v - номер версии (1 символ)
@@ -22,36 +51,17 @@ class CallbackDataBuilderV1:
       data - данные (1-53 символа)
     """
 
-    def __init__(self):
-        self._handler = None
-        self._command = None
-        self._data = ""
-
-    def setHandler(self, cls):
-        self._handler = cls
-        return self
-
-    def setCommand(self, command):
-        self._command = command
-        return self
-
-    def setData(self, data):
-        if len(data) > 53:
-            raise VotegramCallbackDataParseError
-
-        self._data = data
-        return self
-
     def build(self):
-        if not isclass(self._handler):
-            self._handler = self._handler.__class__
-        base_str = self._handler.__name__ + self._command
-        hash_base_str = hash64(base_str)
-        return "1:{}:{}".format(hash_base_str, self._data)
+        # TODO: сделать корректный обработчик
+        #if not self._command:
+        #    raise VoteQueryBuildError
+
+        hash_str = self._salt + self._command
+        hash_str = hash64(hash_str)
+        return "1:{}:{}".format(hash_str, self._data)
 
 
-class CallbackDataParserV1:
+class CallbackDataParserV1(BaseQueryBuilderV1):
 
-    @staticmethod
-    def getData(str):
+    def get_data(self, str):
         return re.match("1:.+?:(.*)", str).group(1)
