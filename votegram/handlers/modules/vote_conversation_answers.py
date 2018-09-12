@@ -1,24 +1,18 @@
 import copy
 
-from ...handlers import (
-    ModuleHandler,
-)
-
 from telegram.ext import (
-    ConversationHandler,
     CommandHandler,
     MessageHandler,
-    CommandHandler,
     Filters,
+)
+
+from ...handlers import (
+    ModuleHandler,
 )
 
 from ...telegram_utils import (
     Message,
     ConversationHandlerWrapper,
-)
-
-from telegram import (
-    Update,
 )
 
 ANSWER_INPUT = range(1)
