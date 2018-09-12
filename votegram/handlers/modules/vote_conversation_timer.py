@@ -211,4 +211,4 @@ class VoteConversationTimerHandler(ModuleHandler):
         time = parser.get_data(query.data)
 
         # передаем данные слушателю
-        self.notify(bot, update, time)
+        self._notify(bot, update, time)

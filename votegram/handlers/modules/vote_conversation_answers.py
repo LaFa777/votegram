@@ -94,4 +94,4 @@ class VoteConvesationAnswersHandler(ModuleHandler):
         answers = ["За", "глу", "шка"]
 
         # передаем данные слушателю
-        self.notify(bot, update, answers)
+        self._notify(bot, update, answers)

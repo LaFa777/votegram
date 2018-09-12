@@ -54,6 +54,6 @@ class ModuleHandler(Handler):
         """
         self._done_callbacks.append(callback)
 
-    def notify(self, bot, update, data):
+    def _notify(self, bot, update, data):
         for callback in self._done_callbacks:
             callback(bot, update, data)
