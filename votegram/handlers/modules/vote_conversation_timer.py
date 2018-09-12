@@ -15,6 +15,7 @@ from ...telegram_utils import (
     Button,
     ButtonsMenu,
     Message,
+    CallbackQueryHandlerExt,
 )
 
 __all__ = ("VoteConversationTimer")
@@ -124,32 +125,25 @@ class TimeStepper:
 
 class VoteConversationTimerHandler(ModuleHandler):
 
-    def __init__(self,
-                 dispatcher,
-                 query_builder,
-                 query_parser):
-        self._query_builder = copy.copy(query_builder)
-        self._query_parser = copy.copy(query_parser)
+    def __init__(self, dispatcher, query_builder=None, query_parser=None):
         self._time_stepper = TimeStepper()
 
-        super().__init__(dispatcher)
+        super().__init__(
+            dispatcher,
+            query_builder=query_builder,
+            query_parser=query_parser)
 
     def bind_handlers(self, dispatcher):
-        query = self._query_builder
-
         # цепляем обработчик для time_down
-        pattern = query.set_command(COMMAND.TIMER_DOWN).build()
-        handler = CallbackQueryHandler(self.timer_down, pattern=pattern)
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_DOWN, self.timer_down)
         dispatcher.add_handler(handler)
 
         # цепляем обработчик для time_up
-        pattern = query.set_command(COMMAND.TIMER_UP).build()
-        handler = CallbackQueryHandler(self.timer_up, pattern=pattern)
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_UP, self.timer_up)
         dispatcher.add_handler(handler)
 
         # цепляем обработчик для time_done
-        pattern = query.set_command(COMMAND.TIMER_DONE).build()
-        handler = CallbackQueryHandler(self.timer_done, pattern=pattern)
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_DONE, self.timer_done)
         dispatcher.add_handler(handler)
 
     def start(self, bot, update):

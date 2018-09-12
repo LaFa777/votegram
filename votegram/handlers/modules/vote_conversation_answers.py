@@ -1,5 +1,3 @@
-import copy
-
 from telegram.ext import (
     CommandHandler,
     MessageHandler,
@@ -12,7 +10,7 @@ from ...handlers import (
 
 from ...telegram_utils import (
     Message,
-    ConversationHandlerWrapper,
+    ConversationHandlerExt,
 )
 
 ANSWER_INPUT = range(1)
@@ -37,27 +35,23 @@ class VoteConvesationAnswersHandler(ModuleHandler):
       ограничение по добавленным ответам
     """
 
-    def __init__(self,
-                 dispatcher,
-                 query_builder,
-                 query_parser):
-        self._query_builder = copy.copy(query_builder)
-        self._query_parser = copy.copy(query_parser)
+    def __init__(self, dispatcher, query_builder=None, query_parser=None):
         self._conv_handler = None
         self._render = Render()
 
-        super().__init__(dispatcher)
+        super().__init__(
+            dispatcher,
+            query_builder=query_builder,
+            query_parser=query_parser)
 
     def bind_handlers(self, dispatcher):
-        self._conv_handler = ConversationHandlerWrapper(
+        self._conv_handler = ConversationHandlerExt(
             entry_points=[],
             states={
                 ANSWER_INPUT: [MessageHandler(Filters.text, self.answers_add)],
             },
-            fallbacks=[
-                CommandHandler('done', self.answers_done),
-            ]
-        )
+            fallbacks=[CommandHandler('done', self.answers_done), ])
+
         dispatcher.add_handler(self._conv_handler)
 
     def start(self, bot, update):

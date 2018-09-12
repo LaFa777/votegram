@@ -2,6 +2,7 @@ from ..telegram_utils import (
     Message,
     ButtonsMenu,
     Button,
+    CallbackQueryHandlerExt,
 )
 
 from telegram.ext import (
@@ -10,7 +11,7 @@ from telegram.ext import (
 )
 
 from ..handlers import (
-    Handler,
+    ModuleHandler,
     CallbackDataBuilderV1,
     CallbackDataParserV1,
 )
@@ -20,7 +21,7 @@ __all__ = ("VoteBuilderConversationHandler")
 
 
 class COMMAND:
-    CHOOSE_BUILDER = "CHOOSE_BUILDER"
+    SELECT_BUILDER = "SELECT_BUILDER"
 
 
 class Render:
@@ -31,40 +32,40 @@ class Render:
         for obj, desc in builders.items():
             class_name = obj.__class__.__name__
             button = Button(desc,
-                            command=COMMAND.CHOOSE_BUILDER,
+                            command=COMMAND.SELECT_BUILDER,
                             data=class_name)
             keyboard.add_line(button)
         return Message("Выберите тип голосования:", markup=keyboard)
 
 
-class VoteSelectorBuilderHandler(Handler):
+class VoteSelectorBuilderHandler(ModuleHandler):
 
-    def __init__(self, dispatcher):
+    def __init__(self, dispatcher, query_builder=None, query_parser=None):
         self._builders = {}
-        self._query_builder = CallbackDataBuilderV1()
-        self._query_builder.set_salt(self.__class__.__name__)
-        self._query_parser = CallbackDataParserV1()
-        self._query_parser.set_salt(self.__class__.__name__)
         self._render = Render()
 
-        super().__init__(dispatcher)
+        super().__init__(
+            dispatcher,
+            query_builder=query_builder,
+            query_parser=query_parser,
+            query_salt=self.__class__.__name__)
+
+    def bind_handlers(self, dispatcher):
+        handler = CommandHandler("start", self.show_selector)
+        dispatcher.add_handler(handler)
+
+        handler = CallbackQueryHandlerExt(COMMAND.SELECT_BUILDER, self.select_done)
+        dispatcher.add_handler(handler)
 
     def add_builder(self, builder, description=None):
+        """Добавляем обработчиков типа `VoteBuilderHandler`
+        """
+        # TODO: сделать проверку на isinstance(builder, VoteBuilderHandler)
         if description is None:
             description = "No description"
         self._builders[builder] = description
 
-    def bind_handlers(self, dispatcher):
-        handler = CommandHandler("start", self.show_selection_form)
-        dispatcher.add_handler(handler)
-
-        pattern = self._query_builder\
-            .set_command(COMMAND.CHOOSE_BUILDER)\
-            .build()
-        handler = CallbackQueryHandler(self.envoke_building, pattern=pattern)
-        dispatcher.add_handler(handler)
-
-    def show_selection_form(self, bot, update):
+    def show_selector(self, bot, update):
         """Показывает форму выбора типа сборщика голосования
         """
         # TODO: выполнять только если not self._builders
@@ -76,7 +77,7 @@ class VoteSelectorBuilderHandler(Handler):
         bot.send_message(chat_id=update.message.chat_id,
                          **tg_message)
 
-    def envoke_building(self, bot, update):
+    def select_done(self, bot, update):
         """Инициирует начало сборки выбранного голосования.
         Удаляет сообщение с формой выбора билдера.
         """
@@ -89,3 +90,5 @@ class VoteSelectorBuilderHandler(Handler):
             if class_name == obj.__class__.__name__:
                 obj.start(bot, update)
                 return
+
+    # TODO: добавить обработку когда закончится сборка Vote

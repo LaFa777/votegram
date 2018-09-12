@@ -1,5 +1,16 @@
+import copy
+
 from telegram.ext import (
     Dispatcher,
+)
+
+from ..telegram_utils import (
+    DispatcherProxy,
+)
+
+from .utils import (
+    CallbackDataBuilderV1,
+    CallbackDataParserV1,
 )
 
 """Потомки абстрактных классов определенных ниже добавляют обработчики в
@@ -15,9 +26,10 @@ class Handler:
     2. Коолбеки, к которым происходит биндинг в bind_handlers
     """
 
-    def __init__(self, dispatcher):
+    def __init__(self, dispatcher, bind_handlers=True):
             self._dispatcher = dispatcher
-            self.bind_handlers(self._dispatcher)
+            if bind_handlers:
+                self.bind_handlers(self._dispatcher)
 
     def bind_handlers(self, dispatcher):
         """Выполняет биндинг хандлеров.
@@ -39,9 +51,28 @@ class ModuleHandler(Handler):
     унифицирован и индивидуален у каждого модуля (читайте в описании к модулю).
     """
 
-    def __init__(self, dispatcher):
+    def __init__(self,
+                 dispatcher,
+                 bind_handlers=True,
+                 query_builder=None,
+                 query_parser=None,
+                 query_salt=None):
+        if query_builder:
+            self._query_builder = copy.copy(query_builder)
+        else:
+            self._query_builder = CallbackDataBuilderV1()
+        if query_parser:
+            self._query_parser = copy.copy(query_parser)
+        else:
+            self._query_parser = CallbackDataParserV1()
+        # устанавливаем уникальное значения для хеширования запросов
+        if query_salt:
+            self._query_builder.set_salt(query_salt)
+            self._query_parser.set_salt(query_salt)
         self._done_callbacks = []
-        super().__init__(dispatcher)
+
+        dispatcher = DispatcherProxy(dispatcher, self._query_builder)
+        super().__init__(dispatcher, bind_handlers)
 
     def start(self, bot, update):
         """Вызвать для активации модуля
