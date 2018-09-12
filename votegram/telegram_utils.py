@@ -21,12 +21,12 @@ class ButtonsMenu:
 
     # TODO: to_dict
 
-    def to_telegram(self, query_builder):
+    def to_telegram(self, data_serializer):
         keyboard = []
         for buttons in self._menu:
             line = []
             for button in buttons:
-                tg_button = button.to_telegram(query_builder)
+                tg_button = button.to_telegram(data_serializer)
                 line.append(tg_button)
             keyboard.append(line)
         return InlineKeyboardMarkup(keyboard)
@@ -41,12 +41,12 @@ class Button:
 
     # TODO: to_dict
 
-    def to_telegram(self, query_builder):
+    def to_telegram(self, data_serializer):
 
-        data = query_builder\
+        data = data_serializer\
                 .set_command(self._command)\
                 .set_data(self._data)\
-                .build()
+                .dumps()
 
         button = InlineKeyboardButton(text=self._text, callback_data=data)
 
@@ -61,10 +61,10 @@ class Message:
 
     # TODO: to_dict
 
-    def to_telegram(self, query_builder):
+    def to_telegram(self, data_serializer):
         reply_markup = None
         if self._markup is not None:
-            reply_markup = self._markup.to_telegram(query_builder)
+            reply_markup = self._markup.to_telegram(data_serializer)
         return {
             "text": self._text,
             "reply_markup": reply_markup,
@@ -98,14 +98,14 @@ DEFAULT_GROUP = 0
 
 
 class DispatcherProxy(Dispatcher):
-    def __init__(self, dispatcher, query_builder):
+    def __init__(self, dispatcher, data_serializer):
         self._dispatcher = dispatcher
-        self._query_builder = query_builder
+        self._data_serializer = data_serializer
 
     def add_handler(self, handler, group=DEFAULT_GROUP):
         # формируем корректный pattern в случае, если это `HandlerExt`
         if isinstance(handler, HandlerExt):
-            hash_str = self._query_builder.set_command(handler.command).build()
+            hash_str = self._data_serializer.set_command(handler.command).dumps()
             handler.handler.pattern = hash_str
             handler = handler.handler
 

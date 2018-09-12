@@ -125,13 +125,10 @@ class TimeStepper:
 
 class VoteConversationTimerHandler(ModuleHandler):
 
-    def __init__(self, dispatcher, query_builder=None, query_parser=None):
+    def __init__(self, dispatcher, data_serializer):
         self._time_stepper = TimeStepper()
 
-        super().__init__(
-            dispatcher,
-            query_builder=query_builder,
-            query_parser=query_parser)
+        super().__init__(dispatcher, data_serializer=data_serializer)
 
     def bind_handlers(self, dispatcher):
         # цепляем обработчик для time_down
@@ -150,6 +147,15 @@ class VoteConversationTimerHandler(ModuleHandler):
         # TODO: добавить параметр inplace и сделать его тут False
         self.timer_show(bot, update)
 
+    def get_data(self, update):
+        """Функция для вычленения данных из запроса
+        """
+        parser = self._data_serializer
+        query = update.callback_query
+
+        data = parser.loads(query.data)
+        return data
+
     def timer_show(self, bot, update, time=None, inplace=True):
         """Показывает сообщение с выбором времени
         """
@@ -161,7 +167,7 @@ class VoteConversationTimerHandler(ModuleHandler):
         # TODO: добавить логику для показа левой и правой кнопки
         tg_message = Render()\
             .form_timer(time).\
-            to_telegram(self._query_builder)
+            to_telegram(self._data_serializer)
 
         # TODO: если inplace==False, то отправить отдельным сообщением
         query = update.callback_query.message
@@ -171,10 +177,7 @@ class VoteConversationTimerHandler(ModuleHandler):
 
     def timer_down(self, bot, update):
         timer = self._time_stepper
-        parser = self._query_parser
-        query = update.callback_query
-
-        data = parser.get_data(query.data)
+        data = self.get_data(update)
         time = timer.step_down(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
         if data == time:
@@ -185,10 +188,7 @@ class VoteConversationTimerHandler(ModuleHandler):
 
     def timer_up(self, bot, update):
         timer = self._time_stepper
-        parser = self._query_parser
-        query = update.callback_query
-
-        data = parser.get_data(query.data)
+        data = self.get_data(update)
         time = timer.step_up(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
         # if data == time:
@@ -200,9 +200,7 @@ class VoteConversationTimerHandler(ModuleHandler):
     def timer_done(self, bot, update):
         """Передает посреднику время
         """
-        parser = self._query_parser
-        query = update.callback_query
-        time = parser.get_data(query.data)
+        time = self.get_data(update)
 
         # передаем данные слушателю
         self._notify(bot, update, time)

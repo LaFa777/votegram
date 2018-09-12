@@ -35,14 +35,10 @@ class VoteConvesationAnswersHandler(ModuleHandler):
       ограничение по добавленным ответам
     """
 
-    def __init__(self, dispatcher, query_builder=None, query_parser=None):
+    def __init__(self, dispatcher, data_serializer):
         self._conv_handler = None
         self._render = Render()
-
-        super().__init__(
-            dispatcher,
-            query_builder=query_builder,
-            query_parser=query_parser)
+        super().__init__(dispatcher, data_serializer=data_serializer)
 
     def bind_handlers(self, dispatcher):
         self._conv_handler = ConversationHandlerExt(
@@ -62,7 +58,7 @@ class VoteConvesationAnswersHandler(ModuleHandler):
     def answers_start(self, bot, update):
         """Показывает сообщение о вводе или /done для отмены
         """
-        tg_message = Render().form_start().to_telegram(self._query_builder)
+        tg_message = Render().form_start().to_telegram(self._data_serializer)
         chat_id = None
         if update.message:
             chat_id = update.message.chat_id
@@ -77,9 +73,8 @@ class VoteConvesationAnswersHandler(ModuleHandler):
         return ANSWER_INPUT
 
     def answers_add(self, bot, update):
-        tg_message = Render().form_add_answer().to_telegram(self._query_builder)
-        bot.send_message(chat_id=update.message.chat_id,
-                         **tg_message)
+        tg_message = Render().form_add_answer().to_telegram(self._data_serializer)
+        bot.send_message(chat_id=update.message.chat_id, **tg_message)
 
     def answers_done(self, bot, update):
         # parser = self._query_parser

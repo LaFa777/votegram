@@ -1,7 +1,5 @@
 from ...handlers import (
     ModuleHandler,
-    CallbackDataBuilderV1,
-    CallbackDataParserV1,
 )
 
 from ..modules import (
@@ -22,24 +20,22 @@ class VoteBuilderPissHandler(ModuleHandler):
         2. Сделать упрощенную версию для чатов (аля /piss @user)
     """
 
-    def __init__(self, dispatcher, query_builder=None, query_parser=None):
+    def __init__(self, dispatcher, data_serializer=None):
         super().__init__(
             dispatcher,
             bind_handlers=False,
-            query_builder=query_builder,
-            query_parser=query_parser,
-            query_salt=self.__class__.__name__)
+            data_serializer=data_serializer)
+
+        self._data_serializer.set_salt(self.__class__.__name__)
 
         self._timer_handler = VoteConversationTimerHandler(
-            dispatcher=dispatcher,
-            query_builder=self._query_builder,
-            query_parser=self._query_parser,
+            dispatcher,
+            data_serializer=self._data_serializer,
         )
 
         self._answers_handler = VoteConvesationAnswersHandler(
-            dispatcher=dispatcher,
-            query_builder=self._query_builder,
-            query_parser=self._query_parser,
+            dispatcher,
+            data_serializer=self._data_serializer,
         )
 
         self.bind_handlers(self._dispatcher)

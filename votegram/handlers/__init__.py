@@ -3,8 +3,7 @@ from .core import (
     ModuleHandler,
 )
 from .utils import (
-    CallbackDataBuilderV1,
-    CallbackDataParserV1,
+    CallbackQuerySerializer,
 )
 
 from .modules import (

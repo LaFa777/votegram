@@ -9,8 +9,7 @@ from ..telegram_utils import (
 )
 
 from .utils import (
-    CallbackDataBuilderV1,
-    CallbackDataParserV1,
+    CallbackQuerySerializer,
 )
 
 """Потомки абстрактных классов определенных ниже добавляют обработчики в
@@ -51,33 +50,25 @@ class ModuleHandler(Handler):
     унифицирован и индивидуален у каждого модуля (читайте в описании к модулю).
     """
 
-    def __init__(self,
-                 dispatcher,
-                 bind_handlers=True,
-                 query_builder=None,
-                 query_parser=None,
-                 query_salt=None):
-        if query_builder:
-            self._query_builder = copy.copy(query_builder)
+    def __init__(self, dispatcher, bind_handlers=True, data_serializer=None):
+        if data_serializer:
+            self._data_serializer = copy.copy(data_serializer)
         else:
-            self._query_builder = CallbackDataBuilderV1()
-        if query_parser:
-            self._query_parser = copy.copy(query_parser)
-        else:
-            self._query_parser = CallbackDataParserV1()
-        # устанавливаем уникальное значения для хеширования запросов
-        if query_salt:
-            self._query_builder.set_salt(query_salt)
-            self._query_parser.set_salt(query_salt)
+            self._data_serializer = CallbackQuerySerializer()
+
         self._done_callbacks = []
 
-        dispatcher = DispatcherProxy(dispatcher, self._query_builder)
+        dispatcher = DispatcherProxy(dispatcher, self._data_serializer)
         super().__init__(dispatcher, bind_handlers)
 
     def start(self, bot, update):
         """Вызвать для активации модуля
         """
         raise NotImplementedError
+
+    # def get_data(self, bot, update):
+    #     """Вычлиняет из запроса данные для модуля
+    #     """
 
     def add_done_callback(self, callback):
         """Цепляет функцию обработчик в которую по окончанию передаются данные
