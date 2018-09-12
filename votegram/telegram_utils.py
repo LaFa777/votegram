@@ -3,6 +3,10 @@ from telegram import (
     InlineKeyboardButton,
 )
 
+from telegram.ext import (
+    ConversationHandler,
+)
+
 
 class ButtonsMenu:
 
@@ -48,7 +52,6 @@ class Button:
         return button
 
 
-# TODO: для этого есть встроенный обьект в python-telegram!!!
 class Message:
 
     def __init__(self, text, markup=None):
@@ -58,8 +61,16 @@ class Message:
     # TODO: to_dict
 
     def to_telegram(self, query_builder):
-        reply_markup = self._markup.to_telegram(query_builder)
+        reply_markup = None
+        if self._markup is not None:
+            reply_markup = self._markup.to_telegram(query_builder)
         return {
             "text": self._text,
             "reply_markup": reply_markup,
         }
+
+
+class ConversationHandlerWrapper(ConversationHandler):
+    def set_state(self, update, state):
+        key = self._get_key(update)
+        self.update_state(state, key)

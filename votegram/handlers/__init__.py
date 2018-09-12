@@ -1,6 +1,6 @@
 from .core import (
     Handler,
-    ConversationHandler,
+    ModuleHandler,
 )
 from .utils import (
     CallbackDataBuilderV1,

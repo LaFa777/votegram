@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 from ...handlers import (
-    ConversationHandler,
+    ModuleHandler,
 )
 
 from ...telegram_utils import (
@@ -122,7 +122,7 @@ class TimeStepper:
             return False
 
 
-class VoteConversationTimerHandler(ConversationHandler):
+class VoteConversationTimerHandler(ModuleHandler):
 
     def __init__(self,
                  dispatcher,

@@ -22,7 +22,7 @@ class Handler:
         raise NotImplementedError
 
 
-class ConversationHandler(Handler):
+class ModuleHandler(Handler):
     """Модуль для обработки более сложных взаимодействий с пользователем.
 
     Имеет точку входа .start(), которая имеет привелегию переключить контекст
