@@ -9,8 +9,10 @@ from ..modules import (
     VoteConvesationAnswersHandler,
 )
 
+from .core import VoteBuilderHandler
 
-class VoteBuilderPissHandler(ModuleHandler):
+
+class VoteBuilderPissHandler(VoteBuilderHandler):
     """Собирает голосование против нехорошего пользователя
 
     Этапы:

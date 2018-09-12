@@ -17,4 +17,4 @@ from .builders import (
 
 # Handlers's
 from .default import DefaultHandler
-from .vote_builder import VoteBuilderHandler
+from .vote_selector_builder import VoteSelectorBuilderHandler

@@ -37,7 +37,7 @@ class Render:
         return Message("Выберите тип голосования:", markup=keyboard)
 
 
-class VoteBuilderHandler(Handler):
+class VoteSelectorBuilderHandler(Handler):
 
     def __init__(self, dispatcher):
         self._builders = {}

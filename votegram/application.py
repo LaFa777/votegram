@@ -1,6 +1,6 @@
 from .handlers import (
     DefaultHandler,
-    VoteBuilderHandler,
+    VoteSelectorBuilderHandler,
     VoteBuilderPissHandler,
 )
 
@@ -18,7 +18,7 @@ class Application:
 
         DefaultHandler(dispatcher)
 
-        voteBuilder = VoteBuilderHandler(dispatcher)
+        voteBuilder = VoteSelectorBuilderHandler(dispatcher)
         voteBuilder.add_builder(VoteBuilderPissHandler(dispatcher),
                                 description="Писс")
 
