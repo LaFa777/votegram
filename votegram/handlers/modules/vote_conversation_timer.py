@@ -7,11 +7,11 @@ from telegram.ext import (
     #    CommandHandler,
 )
 
-from ..handlers import (
+from ...handlers import (
     ConversationHandler,
 )
 
-from ..telegram_utils import (
+from ...telegram_utils import (
     Button,
     ButtonsMenu,
     Message,
@@ -122,7 +122,7 @@ class TimeStepper:
             return False
 
 
-class VoteConversationTimer(ConversationHandler):
+class VoteConversationTimerHandler(ConversationHandler):
 
     def __init__(self,
                  dispatcher,

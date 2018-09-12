@@ -7,9 +7,13 @@ from .utils import (
     CallbackDataParserV1,
 )
 
-# ConversationHandler's
-from .vote_builder_timer import VoteConversationTimer
-from .vote_builder_piss_person import VoteBuilderPissHandler
+from .modules import (
+    VoteConversationTimerHandler,
+)
+
+from .builders import (
+    VoteBuilderPissHandler,
+)
 
 # Handlers's
 from .default import DefaultHandler

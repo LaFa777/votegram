@@ -1,11 +1,11 @@
-from ..handlers import (
+from ...handlers import (
     Handler,
     ConversationHandler,
     CallbackDataBuilderV1,
     CallbackDataParserV1,
 )
 
-from .vote_builder_timer import VoteConversationTimer
+from ..modules import VoteConversationTimerHandler
 
 
 class VoteBuilderPissHandler(ConversationHandler):
@@ -28,7 +28,7 @@ class VoteBuilderPissHandler(ConversationHandler):
         self._query_parser = CallbackDataParserV1()
         self._query_parser.set_salt(self.__class__.__name__)
 
-        self._timer_handler = VoteConversationTimer(
+        self._timer_handler = VoteConversationTimerHandler(
             dispatcher=dispatcher,
             query_builder=self._query_builder,
             query_parser=self._query_parser,
