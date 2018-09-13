@@ -80,10 +80,6 @@ class VoteSelectorBuilderHandler(ModuleHandler):
         parser = self._data_serializer
         query = update.callback_query
         class_name = parser.loads(query.data)
-        message = update.effective_message()
-        bot.delete_message(chat_id=message.chat_id,
-                           message_id=message.message_id
-                           )
 
         for obj in self._builders:
             if class_name == obj.__class__.__name__:
