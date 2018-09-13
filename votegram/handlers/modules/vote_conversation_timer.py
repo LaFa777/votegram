@@ -2,6 +2,10 @@ import copy
 
 import arrow
 
+from telegram.error import (
+    BadRequest,
+)
+
 from telegram.ext import (
     CallbackQueryHandler,
     #    CommandHandler,
@@ -143,10 +147,6 @@ class VoteConversationTimerHandler(ModuleHandler):
         handler = CallbackQueryHandlerExt(COMMAND.TIMER_DONE, self.timer_done)
         dispatcher.add_handler(handler)
 
-    def start(self, bot, update):
-        # TODO: добавить параметр inplace и сделать его тут False
-        self.timer_show(bot, update)
-
     def get_data(self, update):
         """Функция для вычленения данных из запроса
         """
@@ -156,7 +156,10 @@ class VoteConversationTimerHandler(ModuleHandler):
         data = parser.loads(query.data)
         return data
 
-    def timer_show(self, bot, update, time=None, inplace=True):
+    def start(self, bot, update, replace_message=True):
+        self.timer_show(bot, update, None, replace_message)
+
+    def timer_show(self, bot, update, time=None, replace_message=True):
         """Показывает сообщение с выбором времени
         """
         timer = self._time_stepper
@@ -169,20 +172,27 @@ class VoteConversationTimerHandler(ModuleHandler):
             .form_timer(time).\
             to_telegram(self._data_serializer)
 
-        # TODO: если inplace==False, то отправить отдельным сообщением
-        query = update.callback_query.message
-        bot.edit_message_text(chat_id=query.chat_id,
-                              message_id=query.message_id,
-                              **tg_message)
+        message = update.effective_message
+        if replace_message:
+            try:
+                bot.edit_message_text(chat_id=message.chat_id,
+                                      message_id=message.message_id,
+                                      **tg_message)
+            # скорее всего редактирование сообщения не удалось, т.к. оно такое же
+            except BadRequest:
+                pass
+        else:
+            bot.send_message(chat_id=message.chat_id,
+                             **tg_message)
 
     def timer_down(self, bot, update):
         timer = self._time_stepper
         data = self.get_data(update)
         time = timer.step_down(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        if data == time:
-            # TODO: решить проблему с часами на кнопке
-            return
+        # if data == time:
+        #     # TODO: решить проблему с часами на кнопке
+        #     return
 
         self.timer_show(bot, update, time)
 

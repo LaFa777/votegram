@@ -25,6 +25,9 @@ class Render:
 
     @staticmethod
     def form_builder(builders):
+        if not builders:
+            return Message("Отсутствуют сборщики голосований")
+
         keyboard = ButtonsMenu()
         for obj, desc in builders.items():
             data = obj.__class__.__name__
@@ -54,19 +57,30 @@ class VoteSelectorBuilderHandler(ModuleHandler):
         handler = CallbackQueryHandlerExt(COMMAND.SELECT_BUILDER, self.select_done)
         dispatcher.add_handler(handler)
 
-    def add_builder(self, builder, description=None):
-        """Добавляем обработчиков типа `VoteBuilderHandler`
+    def get_data(self, update):
+        """Возвращает class_name обработав ответ
         """
-        # TODO: сделать проверку на isinstance(builder, VoteBuilderHandler)
+        parser = self._data_serializer
+
+        class_name = ""
+        if update.callback_query:
+            class_name = parser.loads(update.callback_query.data)
+        else:
+            raise NotImplementedError
+
+        return class_name
+
+    def add_builder(self, builder, description=None):
+        """Добавляем обработчиков типа `ModuleHandler`
+        """
         if description is None:
             description = "No description"
+
         self._builders[builder] = description
 
     def show_selector(self, bot, update):
         """Показывает форму выбора типа сборщика голосования
         """
-        # TODO: выполнять только если not self._builders
-
         tg_message = self._render\
             .form_builder(self._builders)\
             .to_telegram(self._data_serializer)
@@ -75,19 +89,12 @@ class VoteSelectorBuilderHandler(ModuleHandler):
 
     def select_done(self, bot, update):
         """Инициирует начало сборки выбранного голосования.
-        Удаляет сообщение с формой выбора билдера.
         """
-        parser = self._data_serializer
-        query = update.callback_query
-        class_name = parser.loads(query.data)
-        message = update.effective_message()
-        bot.delete_message(chat_id=message.chat_id,
-                           message_id=message.message_id
-                           )
+        class_name = self.get_data(update)
 
         for obj in self._builders:
             if class_name == obj.__class__.__name__:
                 obj.start(bot, update)
                 return
 
-    # TODO: добавить обработку когда закончится сборка Vote
+    # TODO: добавить обработку когда закончится сборка Vote (пока нет смысла)
