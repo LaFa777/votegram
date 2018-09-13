@@ -4,6 +4,10 @@ from .handlers import (
     VoteBuilderPissHandler,
 )
 
+from .telegram_utils import (
+    DispatcherProxy,
+)
+
 # from .vote_managers import VoteManagerMemory
 
 
@@ -15,6 +19,7 @@ class Application:
         # vote_manager = VoteManagerMemory()
 
         dispatcher = self.updater.dispatcher
+        dispatcher = DispatcherProxy(dispatcher)
 
         DefaultHandler(dispatcher)
 
