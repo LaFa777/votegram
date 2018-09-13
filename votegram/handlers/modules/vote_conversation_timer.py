@@ -220,10 +220,6 @@ class VoteConversationTimerHandler(ModuleHandler):
         timer = self._time_stepper
         data = self.get_data(update)
         time = timer.step_left(data)
-        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        # if data == time:
-        #     # TODO: решить проблему с часами на кнопке
-        #     return
 
         self.timer_show(bot, update, time)
 
@@ -232,10 +228,6 @@ class VoteConversationTimerHandler(ModuleHandler):
         data = self.get_data(update)
         time = timer.step_left(data)
         time = timer.step_left(time)
-        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        # if data == time:
-        #     # TODO: решить проблему с часами на кнопке
-        #     return
 
         self.timer_show(bot, update, time)
 
@@ -243,10 +235,6 @@ class VoteConversationTimerHandler(ModuleHandler):
         timer = self._time_stepper
         data = self.get_data(update)
         time = timer.step_right(data)
-        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        # if data == time:
-        #    # TODO: решить проблему с часами на кнопке
-        #    return
 
         self.timer_show(bot, update, time)
 
@@ -255,10 +243,6 @@ class VoteConversationTimerHandler(ModuleHandler):
         data = self.get_data(update)
         time = timer.step_right(data)
         time = timer.step_right(time)
-        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
-        # if data == time:
-        #    # TODO: решить проблему с часами на кнопке
-        #    return
 
         self.timer_show(bot, update, time)
 
