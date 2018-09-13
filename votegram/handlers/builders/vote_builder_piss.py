@@ -20,22 +20,22 @@ class VoteBuilderPissHandler(ModuleHandler):
         2. Сделать упрощенную версию для чатов (аля /piss @user)
     """
 
-    def __init__(self, dispatcher, data_serializer=None):
+    def __init__(self, dispatcher, query_serializer=None):
         super().__init__(
             dispatcher,
             bind_handlers=False,
-            data_serializer=data_serializer)
+            query_serializer=query_serializer)
 
-        self._data_serializer.set_salt(self.__class__.__name__)
+        self._query_serializer.set_salt(self.__class__.__name__)
 
         self._timer_handler = VoteConversationTimerHandler(
             dispatcher,
-            data_serializer=self._data_serializer,
+            query_serializer=self._query_serializer,
         )
 
         self._answers_handler = VoteConvesationAnswersHandler(
             dispatcher,
-            data_serializer=self._data_serializer,
+            query_serializer=self._query_serializer,
         )
 
         self.bind_handlers(self._dispatcher)

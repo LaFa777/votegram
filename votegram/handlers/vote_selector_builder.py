@@ -38,16 +38,16 @@ class Render:
 
 class VoteSelectorBuilderHandler(ModuleHandler):
 
-    def __init__(self, dispatcher, data_serializer=None):
+    def __init__(self, dispatcher, query_serializer=None):
         self._builders = {}
         self._render = Render()
 
         super().__init__(
             dispatcher,
             bind_handlers=False,
-            data_serializer=data_serializer)
+            query_serializer=query_serializer)
 
-        self._data_serializer.set_salt(self.__class__.__name__)
+        self._query_serializer.set_salt(self.__class__.__name__)
         self.bind_handlers(self._dispatcher)
 
     def bind_handlers(self, dispatcher):
@@ -60,7 +60,7 @@ class VoteSelectorBuilderHandler(ModuleHandler):
     def get_data(self, update):
         """Возвращает class_name обработав ответ
         """
-        parser = self._data_serializer
+        parser = self._query_serializer
 
         class_name = ""
         if update.callback_query:
@@ -83,7 +83,7 @@ class VoteSelectorBuilderHandler(ModuleHandler):
         """
         tg_message = self._render\
             .form_builder(self._builders)\
-            .to_telegram(self._data_serializer)
+            .to_telegram(self._query_serializer)
 
         bot.send_message(chat_id=update.message.chat_id, **tg_message)
 

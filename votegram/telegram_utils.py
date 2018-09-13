@@ -19,12 +19,12 @@ class ButtonsMenu(InlineKeyboardMarkup):
     def add_line(self, *buttons):
         self.inline_keyboard.append(buttons)
 
-    def to_telegram(self, data_serializer):
+    def to_telegram(self, query_serializer):
         keyboard = []
         for buttons in self.inline_keyboard:
             line = []
             for button in buttons:
-                tg_button = button.to_telegram(data_serializer)
+                tg_button = button.to_telegram(query_serializer)
                 line.append(tg_button)
             keyboard.append(line)
         return InlineKeyboardMarkup(keyboard)
@@ -37,9 +37,9 @@ class Button:
         self._command = command
         self._data = data
 
-    def to_telegram(self, data_serializer):
+    def to_telegram(self, query_serializer):
 
-        data = data_serializer\
+        data = query_serializer\
                 .set_command(self._command)\
                 .set_data(self._data)\
                 .dumps()
@@ -55,10 +55,10 @@ class Message:
         self._text = text
         self._markup = markup
 
-    def to_telegram(self, data_serializer):
+    def to_telegram(self, query_serializer):
         reply_markup = None
         if self._markup is not None:
-            reply_markup = self._markup.to_telegram(data_serializer)
+            reply_markup = self._markup.to_telegram(query_serializer)
         return {
             "text": self._text,
             "reply_markup": reply_markup,

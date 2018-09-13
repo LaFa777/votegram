@@ -145,12 +145,14 @@ class TimeStepper:
 
 class VoteConversationTimerHandler(ModuleHandler):
 
-    def __init__(self, dispatcher, data_serializer):
+    def __init__(self, dispatcher, query_serializer):
         self._time_stepper = TimeStepper()
 
-        super().__init__(dispatcher, data_serializer=data_serializer)
+        super().__init__(dispatcher, query_serializer=query_serializer)
 
     def bind_handlers(self, dispatcher):
+        # TODO: используя https://github.com/orsinium/rutimeparser предложить ввод даты пользователю
+
         handler = CallbackQueryHandlerExt(COMMAND.TIMER_LEFT, self.timer_left)
         dispatcher.add_handler(handler)
 
@@ -169,7 +171,7 @@ class VoteConversationTimerHandler(ModuleHandler):
     def get_data(self, update):
         """Достает время из запроса
         """
-        parser = self._data_serializer
+        parser = self._query_serializer
 
         time = ""
         if update.callback_query:
@@ -201,7 +203,7 @@ class VoteConversationTimerHandler(ModuleHandler):
 
         tg_message = Render()\
             .form_timer(time, left_buttons, right_buttons, True).\
-            to_telegram(self._data_serializer)
+            to_telegram(self._query_serializer)
 
         message = update.effective_message
         if replace_message:

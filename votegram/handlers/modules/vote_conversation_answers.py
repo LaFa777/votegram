@@ -19,11 +19,11 @@ ANSWER_INPUT = range(1)
 class Render:
     @staticmethod
     def form_start():
-        return Message("Введи ответ или введи /done для окончания ввода.")
+        return Message("Введите свой варинт ответа\nОтправьте /done для окончания ввода.")
 
     @staticmethod
     def form_add_answer():
-        return Message("Ви таки успешно добавили ответ.\n/done для конца")
+        return Message("Ответ успешно добавлен.\nОтправьте /done для окончания ввода.")
 
 
 class VoteConvesationAnswersHandler(ModuleHandler):
@@ -32,13 +32,13 @@ class VoteConvesationAnswersHandler(ModuleHandler):
 
     Todo:
       добавить возможность удаления ответов?
-      ограничение по добавленным ответам
+      ограничение по количеству добавляемых ответов
     """
 
-    def __init__(self, dispatcher, data_serializer):
+    def __init__(self, dispatcher, query_serializer):
         self._conv_handler = None
         self._render = Render()
-        super().__init__(dispatcher, data_serializer=data_serializer)
+        super().__init__(dispatcher, query_serializer=query_serializer)
 
     def bind_handlers(self, dispatcher):
         self._conv_handler = ConversationHandlerExt(
@@ -58,22 +58,14 @@ class VoteConvesationAnswersHandler(ModuleHandler):
     def answers_start(self, bot, update):
         """Показывает сообщение о вводе или /done для отмены
         """
-        tg_message = Render().form_start().to_telegram(self._data_serializer)
-        chat_id = None
-        if update.message:
-            chat_id = update.message.chat_id
-        elif update.callback_query:
-            chat_id = update.callback_query.message.chat_id
-        else:
-            # Выбрасывать ошибка
-            pass
-        bot.send_message(chat_id=chat_id,
+        tg_message = Render().form_start().to_telegram(self._query_serializer)
+        bot.send_message(chat_id=update.effective_message.chat_id,
                          **tg_message)
 
         return ANSWER_INPUT
 
     def answers_add(self, bot, update):
-        tg_message = Render().form_add_answer().to_telegram(self._data_serializer)
+        tg_message = Render().form_add_answer().to_telegram(self._query_serializer)
         bot.send_message(chat_id=update.message.chat_id, **tg_message)
 
     def answers_done(self, bot, update):

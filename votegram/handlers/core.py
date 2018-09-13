@@ -50,15 +50,15 @@ class ModuleHandler(Handler):
     унифицирован и индивидуален у каждого модуля (читайте в описании к модулю).
     """
 
-    def __init__(self, dispatcher, bind_handlers=True, data_serializer=None):
-        if data_serializer:
-            self._data_serializer = copy.copy(data_serializer)
+    def __init__(self, dispatcher, bind_handlers=True, query_serializer=None):
+        if query_serializer:
+            self._query_serializer = copy.copy(query_serializer)
         else:
-            self._data_serializer = CallbackQuerySerializer()
+            self._query_serializer = CallbackQuerySerializer()
 
         self._done_callbacks = []
 
-        dispatcher = DispatcherProxy(dispatcher, self._data_serializer)
+        dispatcher = DispatcherProxy(dispatcher, self._query_serializer)
         super().__init__(dispatcher, bind_handlers)
 
     def start(self, bot, update):
