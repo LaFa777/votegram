@@ -11,17 +11,17 @@ from telegram.ext import (
 )
 
 
-class ButtonsMenu:
+class ButtonsMenu(InlineKeyboardMarkup):
 
     def __init__(self):
-        self._menu = []
+        super().__init__([])
 
     def add_line(self, *buttons):
-        self._menu.append(buttons)
+        self.inline_keyboard.append(buttons)
 
     def to_telegram(self, data_serializer):
         keyboard = []
-        for buttons in self._menu:
+        for buttons in self.inline_keyboard:
             line = []
             for button in buttons:
                 tg_button = button.to_telegram(data_serializer)

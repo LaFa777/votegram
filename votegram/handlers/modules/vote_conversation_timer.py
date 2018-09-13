@@ -26,39 +26,55 @@ __all__ = ("VoteConversationTimer")
 
 
 class COMMAND:
-    TIMER_DOWN = "TIMER.DOWN"
-    TIMER_UP = "TIMER.UP"
+    TIMER_LEFT = "TIMER.LEFT"
+    TIMER_LEFT_X2 = "TIMER.LEFT_X2"
+    TIMER_RIGHT = "TIMER.RIGHT"
+    TIMER_RIGHT_X2 = "TIMER.RIGHT_X2"
     TIMER_DONE = "TIMER.DONE"
 
 
 class Render:
 
     @staticmethod
-    def form_timer(time, show_down=True, show_up=True, x2=False):
-        # TODO: обработка ошибок, когда time не str
-
+    def form_timer(time, show_left=True, show_right=True, x2=False):
         # create keyboard
-        buttonTimeDown = Button(text="<",
-                                command=COMMAND.TIMER_DOWN,
-                                data=time)
+        line_buttons = []
+        if show_left:
+            if x2:
+                buttonTimeLeftX2 = Button(text="<<",
+                                          command=COMMAND.TIMER_LEFT_X2,
+                                          data=time)
+                line_buttons.append(buttonTimeLeftX2)
+            buttonTimeLeft = Button(text="<",
+                                    command=COMMAND.TIMER_LEFT,
+                                    data=time)
+            line_buttons.append(buttonTimeLeft)
 
-        buttonTimeUp = Button(text=">",
-                              command=COMMAND.TIMER_UP,
-                              data=time)
+        if show_right:
+            buttonTimeRight = Button(text=">",
+                                     command=COMMAND.TIMER_RIGHT,
+                                     data=time)
+            line_buttons.append(buttonTimeRight)
+            if x2:
+                buttonTimeRightX2 = Button(text=">>",
+                                           command=COMMAND.TIMER_RIGHT_X2,
+                                           data=time)
+                line_buttons.append(buttonTimeRightX2)
 
         buttonConfirm = Button(text="далее",
                                command=COMMAND.TIMER_DONE,
                                data=time)
 
         keyboard = ButtonsMenu()
-        keyboard.add_line(buttonTimeDown, buttonConfirm, buttonTimeUp)
+        keyboard.add_line(*line_buttons)
+        keyboard.add_line(buttonConfirm)
 
         # create human readable time string
         utc = arrow.utcnow()
         utc = utc.replace(seconds=int(time))
         time_str = utc.humanize(locale='ru_ru')
 
-        text = "Окончание голосования через: {}".format(time_str)
+        text = "Ожидаемое время завершения голосования {}".format(time_str)
 
         return Message(text, markup=keyboard)
 
@@ -88,7 +104,7 @@ class TimeStepper:
         # TODO: change to 30 min
         return str(self._TIME_STEPS[2])
 
-    def step_up(self, time):
+    def step_right(self, time):
         if isinstance(time, str):
             time = int(time)
 
@@ -100,7 +116,7 @@ class TimeStepper:
 
         return str(time)
 
-    def step_down(self, time):
+    def step_left(self, time):
         if isinstance(time, str):
             time = int(time)
 
@@ -113,14 +129,14 @@ class TimeStepper:
         return str(time)
 
     def is_first(self, time):
-        index = self._TIME_STEPS.index(time)
+        index = self._TIME_STEPS.index(int(time))
         if index == 0:
             return True
         else:
             return False
 
     def is_last(self, time):
-        index = self._TIME_STEPS.index(time)
+        index = self._TIME_STEPS.index(int(time))
         if (index + 1) == len(self._TIME_STEPS):
             return True
         else:
@@ -135,26 +151,33 @@ class VoteConversationTimerHandler(ModuleHandler):
         super().__init__(dispatcher, data_serializer=data_serializer)
 
     def bind_handlers(self, dispatcher):
-        # цепляем обработчик для time_down
-        handler = CallbackQueryHandlerExt(COMMAND.TIMER_DOWN, self.timer_down)
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_LEFT, self.timer_left)
         dispatcher.add_handler(handler)
 
-        # цепляем обработчик для time_up
-        handler = CallbackQueryHandlerExt(COMMAND.TIMER_UP, self.timer_up)
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_LEFT_X2, self.timer_left_x2)
         dispatcher.add_handler(handler)
 
-        # цепляем обработчик для time_done
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_RIGHT, self.timer_right)
+        dispatcher.add_handler(handler)
+
+        handler = CallbackQueryHandlerExt(COMMAND.TIMER_RIGHT_X2, self.timer_right_x2)
+        dispatcher.add_handler(handler)
+
         handler = CallbackQueryHandlerExt(COMMAND.TIMER_DONE, self.timer_done)
         dispatcher.add_handler(handler)
 
     def get_data(self, update):
-        """Функция для вычленения данных из запроса
+        """Достает время из запроса
         """
         parser = self._data_serializer
-        query = update.callback_query
 
-        data = parser.loads(query.data)
-        return data
+        time = ""
+        if update.callback_query:
+            time = parser.loads(update.callback_query.data)
+        else:
+            raise NotImplementedError
+
+        return time
 
     def start(self, bot, update, replace_message=True):
         self.timer_show(bot, update, None, replace_message)
@@ -164,12 +187,20 @@ class VoteConversationTimerHandler(ModuleHandler):
         """
         timer = self._time_stepper
 
-        if time is None:
-            time = timer.get_default()
+        # если время None, то устанавливаем время по умолчанию
+        time = time or timer.get_default()
 
-        # TODO: добавить логику для показа левой и правой кнопки
+        # определяем, показывать ли кнопки изменения времени
+        left_buttons = True
+        if timer.is_first(time):
+            left_buttons = False
+
+        right_buttons = True
+        if timer.is_last(time):
+            right_buttons = False
+
         tg_message = Render()\
-            .form_timer(time).\
+            .form_timer(time, left_buttons, right_buttons, True).\
             to_telegram(self._data_serializer)
 
         message = update.effective_message
@@ -185,10 +216,10 @@ class VoteConversationTimerHandler(ModuleHandler):
             bot.send_message(chat_id=message.chat_id,
                              **tg_message)
 
-    def timer_down(self, bot, update):
+    def timer_left(self, bot, update):
         timer = self._time_stepper
         data = self.get_data(update)
-        time = timer.step_down(data)
+        time = timer.step_left(data)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
         # if data == time:
         #     # TODO: решить проблему с часами на кнопке
@@ -196,10 +227,34 @@ class VoteConversationTimerHandler(ModuleHandler):
 
         self.timer_show(bot, update, time)
 
-    def timer_up(self, bot, update):
+    def timer_left_x2(self, bot, update):
         timer = self._time_stepper
         data = self.get_data(update)
-        time = timer.step_up(data)
+        time = timer.step_left(data)
+        time = timer.step_left(time)
+        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
+        # if data == time:
+        #     # TODO: решить проблему с часами на кнопке
+        #     return
+
+        self.timer_show(bot, update, time)
+
+    def timer_right(self, bot, update):
+        timer = self._time_stepper
+        data = self.get_data(update)
+        time = timer.step_right(data)
+        # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
+        # if data == time:
+        #    # TODO: решить проблему с часами на кнопке
+        #    return
+
+        self.timer_show(bot, update, time)
+
+    def timer_right_x2(self, bot, update):
+        timer = self._time_stepper
+        data = self.get_data(update)
+        time = timer.step_right(data)
+        time = timer.step_right(time)
         # если время не изменялось, то ничего не делаем. (иначе вылазит ошибка)
         # if data == time:
         #    # TODO: решить проблему с часами на кнопке
