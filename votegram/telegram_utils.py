@@ -10,6 +10,10 @@ from telegram.ext import (
     Dispatcher,
 )
 
+from .handlers.utils import (
+    CallbackQuerySerializer,
+)
+
 
 class ButtonsMenu(InlineKeyboardMarkup):
 
@@ -92,16 +96,52 @@ DEFAULT_GROUP = 0
 
 
 class DispatcherProxy(Dispatcher):
-    def __init__(self, dispatcher, data_serializer):
+    """Добавляет к диспатчеру функционал по замене объектов-контейнеров, для замены их на
+    аналоги с возможностью запоминания состояния между перезапусками скрипта.
+    Поддержку расширенных обработчиков (имеющих постфикс `Ext`)
+    """
+
+    def __init__(self,
+                 dispatcher,
+                 query_serializer=None,
+                 update_queue=None,
+                 job_queue=None,
+                 user_data=None,
+                 chat_data=None,
+                 conversations_data=None,
+                 conversations_timeout_jobs=None):
         self._dispatcher = dispatcher
-        self._data_serializer = data_serializer
+        self._query_serializer = query_serializer or CallbackQuerySerializer()
+        # для обеспечения сохранения данных между перезапусками скрипта будем использовать
+        # контейнеры-прокси, с возможностью записи на диск и загрузки с диска.
+        if update_queue:
+            self._dispatcher.update_queue = update_queue.update(**dispatcher.update_queue)
+        if job_queue:
+            self._dispatcher.job_queue = job_queue.update(**dispatcher.job_queue)
+        if user_data:
+            self._dispatcher.user_data = user_data.update(**dispatcher.user_data)
+        if chat_data:
+            self._dispatcher.chat_data = chat_data.update(**dispatcher.chat_data)
+        self._conversations_data = None
+        if conversations_data:
+            self._conversations_data = conversations_data
+        self._conversations_timeout_jobs = None
+        if conversations_timeout_jobs:
+            self._conversations_timeout_jobs = conversations_timeout_jobs
 
     def add_handler(self, handler, group=DEFAULT_GROUP):
         # формируем корректный pattern в случае, если это `HandlerExt`
         if isinstance(handler, HandlerExt):
-            hash_str = self._data_serializer.set_command(handler.command).dumps()
+            hash_str = self._query_serializer.set_command(handler.command).dumps()
             handler.handler.pattern = hash_str
             handler = handler.handler
+
+        # в случае, если биндим `ConversationHandler`, то попытаем восстановить прошлое состояние
+        if isinstance(handler, ConversationHandler):
+            if self._conversations_data:
+                handler.conversations = self._conversations_data
+            if self._conversations_timeout_jobs:
+                handler.timeout_jobs = self._conversations_timeout_jobs
 
         self._dispatcher.add_handler(handler, group)
 
