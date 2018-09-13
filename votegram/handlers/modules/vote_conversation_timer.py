@@ -101,8 +101,7 @@ class TimeStepper:
     ]
 
     def get_default(self):
-        # TODO: change to 30 min
-        return str(self._TIME_STEPS[2])
+        return str(self._TIME_STEPS[4])
 
     def step_right(self, time):
         if isinstance(time, str):
