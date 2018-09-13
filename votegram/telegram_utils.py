@@ -19,8 +19,6 @@ class ButtonsMenu:
     def add_line(self, *buttons):
         self._menu.append(buttons)
 
-    # TODO: to_dict
-
     def to_telegram(self, data_serializer):
         keyboard = []
         for buttons in self._menu:
@@ -39,8 +37,6 @@ class Button:
         self._command = command
         self._data = data
 
-    # TODO: to_dict
-
     def to_telegram(self, data_serializer):
 
         data = data_serializer\
@@ -58,8 +54,6 @@ class Message:
     def __init__(self, text, markup=None):
         self._text = text
         self._markup = markup
-
-    # TODO: to_dict
 
     def to_telegram(self, data_serializer):
         reply_markup = None
