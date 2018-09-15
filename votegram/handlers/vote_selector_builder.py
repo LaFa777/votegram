@@ -76,14 +76,11 @@ class VoteSelectorBuilderHandler(ModuleHandler):
         """
         tg_message = self._render.form_builder(self._builders)
 
-        bot = BotProxy(bot, self._query_serializer)
         bot.send_message(chat_id=update.message.chat_id, **tg_message)
 
     def select_done(self, bot, update):
         """Инициирует начало сборки выбранного голосования.
         """
-        print(update.callback_query.data)
-        exit()
         class_name = update.callback_query.data
 
         for obj in self._builders:
