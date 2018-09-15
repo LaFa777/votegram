@@ -128,6 +128,7 @@ class BotProxy:
     """Attribute proxy для `telegram.Bot`
     """
 
+    # TODO: добавить остальные методы с reply_markup (декорированые методов message)
     wrapped_methods = [
         "send_message",
         "edit_message_text",
@@ -153,17 +154,30 @@ class BotProxy:
 def message_callback_data_unserializer(serializer, func):
     # TODO: добавить вывод в логи информации о преобразованных хешах
     @functools.wraps(func)
-    def decorator(bot, update):
+    def decorator(bot, update, *args, **kwargs):
         update.callback_query.data = serializer.loads(update.callback_query.data)
-        return func(bot, update)
+        return func(bot, update, *args, **kwargs)
     return decorator
 
 
 def wrapped_bot_proxy(serializer, func):
     @functools.wraps(func)
-    def decorator(bot, update):
+    def decorator(bot, update, *args, **kwargs):
         bot = BotProxy(bot, serializer)
-        return func(bot, update)
+        return func(bot, update, *args, **kwargs)
+    return decorator
+
+
+# TODO: добавить _callback_data_serializer как параметр декоратора?
+def done_callback(func):
+    """Все функции обрабатывающие результаты работы модуля должны быть декорированы этой функцией
+    """
+    @functools.wraps(func)
+    def decorator(self, bot, update, *args, **kwargs):
+        if isinstance(bot, BotProxy):
+            bot = BotProxy(bot._bot, self._callback_data_serializer)
+        bot = BotProxy(bot, self._callback_data_serializer)
+        return func(self, bot, update, *args, **kwargs)
     return decorator
 
 

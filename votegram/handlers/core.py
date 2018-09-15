@@ -92,5 +92,8 @@ class ComponentHandler(SimpleHandler):
 
         Todo: автоматически загружать переменные хранения???
         """
+        if isinstance(bot, BotProxy):
+            bot = BotProxy(bot._bot, self._callback_data_serializer)
+
         for callback in self._done_callbacks:
             callback(bot, update, data)
