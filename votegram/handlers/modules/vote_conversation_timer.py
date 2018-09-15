@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 
 from ...handlers import (
-    ModuleHandler,
+    ComponentHandler,
 )
 
 from ...telegram_utils import (
@@ -43,27 +43,27 @@ class Render:
             if x2:
                 buttonTimeLeftX2 = InlineKeyboardButtonExt(text="<<",
                                                            command=COMMAND.TIMER_LEFT_X2,
-                                                           data=time)
+                                                           callback_data=time)
                 line_buttons.append(buttonTimeLeftX2)
             buttonTimeLeft = InlineKeyboardButtonExt(text="<",
                                                      command=COMMAND.TIMER_LEFT,
-                                                     data=time)
+                                                     callback_data=time)
             line_buttons.append(buttonTimeLeft)
 
         if show_right:
             buttonTimeRight = InlineKeyboardButtonExt(text=">",
                                                       command=COMMAND.TIMER_RIGHT,
-                                                      data=time)
+                                                      callback_data=time)
             line_buttons.append(buttonTimeRight)
             if x2:
                 buttonTimeRightX2 = InlineKeyboardButtonExt(text=">>",
                                                             command=COMMAND.TIMER_RIGHT_X2,
-                                                            data=time)
+                                                            callback_data=time)
                 line_buttons.append(buttonTimeRightX2)
 
         buttonConfirm = InlineKeyboardButtonExt(text="далее",
                                                 command=COMMAND.TIMER_DONE,
-                                                data=time)
+                                                callback_data=time)
 
         keyboard = InlineKeyboardMarkupExt()
         keyboard.add_line(*line_buttons)
@@ -143,12 +143,13 @@ class TimeStepper:
             return False
 
 
-class VoteConversationTimerHandler(ModuleHandler):
+class VoteConversationTimerHandler(ComponentHandler):
 
-    def __init__(self, dispatcher, query_serializer):
+    def __init__(self, component_name, dispatcher, render=None):
         self._time_stepper = TimeStepper()
+        self._render = render or Render()
 
-        super().__init__(dispatcher, query_serializer=query_serializer)
+        super().__init__(component_name, dispatcher)
 
     def bind_handlers(self, dispatcher):
         # TODO: используя https://github.com/orsinium/rutimeparser предложить ввод даты пользователю
@@ -168,20 +169,7 @@ class VoteConversationTimerHandler(ModuleHandler):
         handler = CallbackQueryHandlerExt(COMMAND.TIMER_DONE, self.timer_done)
         dispatcher.add_handler(handler)
 
-    def get_data(self, update):
-        """Достает время из запроса
-        """
-        parser = self._query_serializer
-
-        time = ""
-        if update.callback_query:
-            time = parser.loads(update.callback_query.data)
-        else:
-            raise NotImplementedError
-
-        return time
-
-    def start(self, bot, update, replace_message=True):
+    def _start(self, bot, update, replace_message=True):
         self.timer_show(bot, update, None, replace_message)
 
     def timer_show(self, bot, update, time=None, replace_message=True):
@@ -201,33 +189,27 @@ class VoteConversationTimerHandler(ModuleHandler):
         if timer.is_last(time):
             right_buttons = False
 
-        tg_message = Render()\
-            .form_timer(time, left_buttons, right_buttons, True).\
-            to_telegram(self._query_serializer)
+        tg_message = self._render.form_timer(time, left_buttons, right_buttons, True)
 
         message = update.effective_message
         if replace_message:
-            try:
                 bot.edit_message_text(chat_id=message.chat_id,
                                       message_id=message.message_id,
                                       **tg_message)
-            # скорее всего редактирование сообщения не удалось, т.к. оно такое же
-            except BadRequest:
-                pass
         else:
             bot.send_message(chat_id=message.chat_id,
                              **tg_message)
 
     def timer_left(self, bot, update):
         timer = self._time_stepper
-        data = self.get_data(update)
+        data = update.callback_query.data
         time = timer.step_left(data)
 
         self.timer_show(bot, update, time)
 
     def timer_left_x2(self, bot, update):
         timer = self._time_stepper
-        data = self.get_data(update)
+        data = update.callback_query.data
         time = timer.step_left(data)
         time = timer.step_left(time)
 
@@ -235,14 +217,14 @@ class VoteConversationTimerHandler(ModuleHandler):
 
     def timer_right(self, bot, update):
         timer = self._time_stepper
-        data = self.get_data(update)
+        data = update.callback_query.data
         time = timer.step_right(data)
 
         self.timer_show(bot, update, time)
 
     def timer_right_x2(self, bot, update):
         timer = self._time_stepper
-        data = self.get_data(update)
+        data = update.callback_query.data
         time = timer.step_right(data)
         time = timer.step_right(time)
 
@@ -251,7 +233,7 @@ class VoteConversationTimerHandler(ModuleHandler):
     def timer_done(self, bot, update):
         """Передает посреднику время
         """
-        time = self.get_data(update)
+        time = update.callback_query.data
 
         # передаем данные слушателю
         self._notify(bot, update, time)

@@ -1,9 +1,9 @@
 from telegram.ext import CommandHandler
 
-from ..handlers import Handler
+from ..handlers import SimpleHandler
 
 
-class DefaultHandler(Handler):
+class DefaultHandler(SimpleHandler):
 
     def bind_handlers(self, dispatcher):
         dispatcher.add_handler(CommandHandler("help", self.help))

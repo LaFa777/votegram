@@ -1,6 +1,6 @@
 from .core import (
-    Handler,
-    ModuleHandler,
+    SimpleHandler,
+    ComponentHandler,
 )
 from .utils import (
     CallbackQuerySerializer,

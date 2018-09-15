@@ -1,24 +1,20 @@
-from ..telegram_utils import (
-    TextMessage,
-    InlineKeyboardMarkupExt,
-    InlineKeyboardButtonExt,
-    CallbackQueryHandlerExt,
-    BotProxy,
-    InlineKeyboardButtonExt,
-)
-
 from telegram.ext import (
     CommandHandler,
 )
 
-from telegram import InlineKeyboardMarkup
+from ..telegram_utils import (
+    CallbackQueryHandlerExt,
+    InlineKeyboardMarkupExt,
+    InlineKeyboardButtonExt,
+    TextMessage,
+)
 
 from ..handlers import (
-    ModuleHandler,
+    ComponentHandler,
 )
 
 
-__all__ = ("VoteBuilderConversationHandler")
+__all__ = ("VoteSelectorBuilderHandler")
 
 
 class COMMAND:
@@ -42,19 +38,13 @@ class Render:
         return TextMessage("Выберите тип голосования:", reply_markup=keyboard)
 
 
-class VoteSelectorBuilderHandler(ModuleHandler):
+class VoteSelectorBuilderHandler(ComponentHandler):
 
-    def __init__(self, dispatcher, query_serializer=None):
+    def __init__(self, dispatcher, render=None):
         self._builders = {}
-        self._render = Render()
+        self._render = render or Render()
 
-        super().__init__(
-            dispatcher,
-            bind_handlers=False,
-            query_serializer=query_serializer)
-
-        self._query_serializer.set_salt(self.__class__.__name__)
-        self.bind_handlers(self._dispatcher)
+        super().__init__(self.__class__.__name__, dispatcher)
 
     def bind_handlers(self, dispatcher):
         handler = CommandHandler("start", self.show_selector)

@@ -6,6 +6,7 @@ from telegram.ext import (
 
 from ..telegram_utils import (
     DispatcherProxy,
+    BotProxy,
 )
 
 from .utils import (
@@ -17,7 +18,7 @@ telegram.Dispatcher. Тем самым создавая что то наподо
 """
 
 
-class Handler:
+class SimpleHandler:
     """Предназначен для обработки простейших событий.
 
     При субклассировании должны быть реализованы:
@@ -36,8 +37,7 @@ class Handler:
         raise NotImplementedError
 
 
-# class ComponentHandler(Handler):
-class ModuleHandler(Handler):
+class ComponentHandler(SimpleHandler):
     """Модуль для обработки сложных действий и возврате данных по окончанию.
 
     Всегда имеет точку входа `.start()` - будьте готовы, что модуль имеет полное
@@ -51,32 +51,46 @@ class ModuleHandler(Handler):
     унифицирован и индивидуален у каждого модуля (читайте в описании к модулю).
     """
 
-    def __init__(self, dispatcher, bind_handlers=True, query_serializer=None):
-        if query_serializer:
-            self._query_serializer = copy.copy(query_serializer)
+    def __init__(self,
+                 component_name,
+                 dispatcher,
+                 bind_handlers=True,
+                 callback_data_serializer=None):
+
+        if callback_data_serializer:
+            self._callback_data_serializer = copy.copy(callback_data_serializer)
         else:
-            self._query_serializer = CallbackQuerySerializer()
+            self._callback_data_serializer = CallbackQuerySerializer()
+
+        self._callback_data_serializer.set_salt(component_name)
+
+        dispatcher = DispatcherProxy(dispatcher, self._callback_data_serializer)
 
         self._done_callbacks = []
 
-        dispatcher = DispatcherProxy(dispatcher, self._query_serializer)
         super().__init__(dispatcher, bind_handlers)
 
     def start(self, bot, update):
-        """Вызвать для активации модуля
+        if isinstance(bot, BotProxy):
+            bot = BotProxy(bot._bot, self._callback_data_serializer)
+        self._start(bot, update)
+
+    def _start(self, bot, update):
+        """Каждый компонент обязан иметь данную точку входа. Вызывается из остальных классов или
+        цепляется на обработчик в `.bind_handlers`.
         """
         raise NotImplementedError
 
-    # def get_data(self, bot, update):
-    #     """Вычлиняет из запроса данные для модуля
-    #     """
-
     def add_done_callback(self, callback):
         """Цепляет функцию обработчик в которую по окончанию передаются данные
-        работы модуля.
+        работы компонента.
         """
         self._done_callbacks.append(callback)
 
     def _notify(self, bot, update, data):
+        """Оповещает функцию обратного вызова о завершении работы компонента и передает в нее данные
+
+        Todo: автоматически загружать переменные хранения???
+        """
         for callback in self._done_callbacks:
             callback(bot, update, data)

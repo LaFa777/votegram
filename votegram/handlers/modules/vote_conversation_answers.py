@@ -5,7 +5,7 @@ from telegram.ext import (
 )
 
 from ...handlers import (
-    ModuleHandler,
+    ComponentHandler,
 )
 
 from ...telegram_utils import (
@@ -26,7 +26,7 @@ class Render:
         return TextMessage("Ответ успешно добавлен.\nОтправьте /done для окончания ввода.")
 
 
-class VoteConvesationAnswersHandler(ModuleHandler):
+class VoteConvesationAnswersHandler(ComponentHandler):
     """Запрашивает у пользователя варианты ответа. В data возвращает массив
     строк введенных пользователем (1 на каждое сообщение).
 
@@ -35,12 +35,13 @@ class VoteConvesationAnswersHandler(ModuleHandler):
       ограничение по количеству добавляемых ответов
     """
 
-    def __init__(self, dispatcher, query_serializer):
+    def __init__(self, component_name, dispatcher, render=None):
         self._conv_handler = None
-        self._render = Render()
-        super().__init__(dispatcher, query_serializer=query_serializer)
+        self._render = render or Render()
+        super().__init__(component_name, dispatcher)
 
     def bind_handlers(self, dispatcher):
+        # TODO: заменить на AnyTextInputHandler ???
         self._conv_handler = ConversationHandlerExt(
             entry_points=[],
             states={
@@ -50,7 +51,7 @@ class VoteConvesationAnswersHandler(ModuleHandler):
 
         dispatcher.add_handler(self._conv_handler)
 
-    def start(self, bot, update):
+    def _start(self, bot, update):
         # инициируем вход(entry_points) в ConversationHandler
         self._conv_handler.set_state(update, ANSWER_INPUT)
         self.answers_start(bot, update)
@@ -58,14 +59,14 @@ class VoteConvesationAnswersHandler(ModuleHandler):
     def answers_start(self, bot, update):
         """Показывает сообщение о вводе или /done для отмены
         """
-        tg_message = Render().form_start().to_telegram(self._query_serializer)
+        tg_message = Render().form_start()
         bot.send_message(chat_id=update.effective_message.chat_id,
                          **tg_message)
 
         return ANSWER_INPUT
 
     def answers_add(self, bot, update):
-        tg_message = Render().form_add_answer().to_telegram(self._query_serializer)
+        tg_message = Render().form_add_answer()
         bot.send_message(chat_id=update.message.chat_id, **tg_message)
 
     def answers_done(self, bot, update):

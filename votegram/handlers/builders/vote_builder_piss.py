@@ -1,5 +1,5 @@
 from ...handlers import (
-    ModuleHandler,
+    ComponentHandler,
 )
 
 from ..modules import (
@@ -8,7 +8,7 @@ from ..modules import (
 )
 
 
-class VoteBuilderPissHandler(ModuleHandler):
+class VoteBuilderPissHandler(ComponentHandler):
     """Собирает голосование против нехорошего пользователя
 
     Этапы:
@@ -20,39 +20,27 @@ class VoteBuilderPissHandler(ModuleHandler):
         2. Сделать упрощенную версию для чатов (аля /piss @user)
     """
 
-    def __init__(self, dispatcher, query_serializer=None):
-        super().__init__(
-            dispatcher,
-            bind_handlers=False,
-            query_serializer=query_serializer)
+    def __init__(self, dispatcher):
+        namespace = self.__class__.__name__
 
-        self._query_serializer.set_salt(self.__class__.__name__)
+        self._timer_handler = VoteConversationTimerHandler(namespace + ".timer", dispatcher)
+        self._answers_handler = VoteConvesationAnswersHandler(namespace + ".answers", dispatcher)
 
-        self._timer_handler = VoteConversationTimerHandler(
-            dispatcher,
-            query_serializer=self._query_serializer,
-        )
-
-        self._answers_handler = VoteConvesationAnswersHandler(
-            dispatcher,
-            query_serializer=self._query_serializer,
-        )
-
-        self.bind_handlers(self._dispatcher)
+        super().__init__(namespace, dispatcher)
 
     def bind_handlers(self, dispatcher):
         self._timer_handler.add_done_callback(self.timer_done)
         self._answers_handler.add_done_callback(self.answers_done)
 
-    def start(self, bot, update):
+    def _start(self, bot, update):
         # начинаем с запроса времени истечения голосования
         self._timer_handler.start(bot, update)
 
     def timer_done(self, bot, update, data):
-        query = update.callback_query
+        message = update.effective_message
 
         # TODO: естественно это не выводить надо, а запоминать
-        bot.send_message(chat_id=query.message.chat_id,
+        bot.send_message(chat_id=message.chat_id,
                          text="Вы выбрали время {}".format(data))
 
         # запускаем операцию получения вариантов ответа от пользователя

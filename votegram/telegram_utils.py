@@ -1,4 +1,5 @@
 import functools
+import copy
 
 from telegram import (
     Bot,
@@ -51,6 +52,9 @@ class InlineKeyboardButtonExt(InlineKeyboardButton):
             del self.command
         return super().to_dict()
 
+# TODO: реализовать
+# class InlineKeyboardButtonMemory(InlineKeyboardButton):
+
 
 class ConversationHandlerExt(ConversationHandler):
     """Модификация оригинального `telegram.ConversationHandler` с возможностью
@@ -99,6 +103,7 @@ class TextMessage(UserDict):
 
 
 def message_callback_data_serializer(serializer, func):
+    # TODO: добавить вывод в логи информации о преобразованных хешах
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         if kwargs.get('reply_markup'):
@@ -112,6 +117,8 @@ def message_callback_data_serializer(serializer, func):
                             button.callback_data = "{hash}{data}".format(
                                 hash=prelude,
                                 data=button.callback_data)
+                            # TODO: добавить в логгирование
+                            # print("serialize: \"{}\"".format(button.callback_data))
 
         return func(*args, **kwargs)
     return decorator
@@ -123,11 +130,15 @@ class BotProxy:
 
     wrapped_methods = [
         "send_message",
+        "edit_message_text",
     ]
 
     def __init__(self, bot, callback_data_serializer=None):
         self._bot = bot
-        self._callback_data_serializer = callback_data_serializer or CallbackQuerySerializer()
+        if callback_data_serializer:
+            self._callback_data_serializer = copy.copy(callback_data_serializer)
+        else:
+            self._callback_data_serializer = CallbackQuerySerializer()
 
     def __getattr__(self, name):
         if name in self.wrapped_methods:
@@ -140,9 +151,17 @@ class BotProxy:
 
 
 def message_callback_data_unserializer(serializer, func):
+    # TODO: добавить вывод в логи информации о преобразованных хешах
     @functools.wraps(func)
     def decorator(bot, update):
         update.callback_query.data = serializer.loads(update.callback_query.data)
+        return func(bot, update)
+    return decorator
+
+
+def wrapped_bot_proxy(serializer, func):
+    @functools.wraps(func)
+    def decorator(bot, update):
         bot = BotProxy(bot, serializer)
         return func(bot, update)
     return decorator
@@ -167,7 +186,10 @@ class DispatcherProxy(Dispatcher):
                  conversations_data=None,
                  conversations_timeout_jobs=None):
         self._dispatcher = dispatcher
-        self._callback_data_serializer = callback_data_serializer or CallbackQuerySerializer()
+        if callback_data_serializer:
+            self._callback_data_serializer = copy.copy(callback_data_serializer)
+        else:
+            self._callback_data_serializer = CallbackQuerySerializer()
         # для обеспечения сохранения данных между перезапусками скрипта будем использовать
         # контейнеры-прокси, с возможностью записи на диск и загрузки с диска.
         if update_queue:
@@ -189,11 +211,13 @@ class DispatcherProxy(Dispatcher):
         # формируем корректный pattern в случае, если это `HandlerExt`
         if isinstance(handler, CallbackQueryHandlerExt):
             hash_str = self._callback_data_serializer.set_command(handler.command).dumps()
+            # TODO: выводить в лог
+            # print("hash_str \"{}\" command \"{}\" salt \"{}\"".format(
+            #     hash_str, handler.command, self._callback_data_serializer._salt))
             handler.handler.pattern = hash_str
             handler = handler.handler
 
             # оборачиваем callback хандлера, чтобы он автоматически зачищал маску при обработке
-            # и заменяем bot на прокси объект
             handler.callback = message_callback_data_unserializer(
                 self._callback_data_serializer, handler.callback)
 
@@ -204,6 +228,10 @@ class DispatcherProxy(Dispatcher):
                 handler.conversations = self._conversations_data
             if self._conversations_timeout_jobs is not None:
                 handler.timeout_jobs = self._conversations_timeout_jobs
+
+        # проксируем аргумент `telegram.Bot`
+        if not isinstance(handler, ConversationHandler):
+            handler.callback = wrapped_bot_proxy(self._callback_data_serializer, handler.callback)
 
         self._dispatcher.add_handler(handler, group)
 
