@@ -36,6 +36,7 @@ class Handler:
         raise NotImplementedError
 
 
+# class ComponentHandler(Handler):
 class ModuleHandler(Handler):
     """Модуль для обработки сложных действий и возврате данных по окончанию.
 

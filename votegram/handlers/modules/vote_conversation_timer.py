@@ -16,9 +16,9 @@ from ...handlers import (
 )
 
 from ...telegram_utils import (
-    Button,
-    ButtonsMenu,
-    Message,
+    InlineKeyboardButtonExt,
+    InlineKeyboardMarkupExt,
+    TextMessage,
     CallbackQueryHandlerExt,
 )
 
@@ -41,31 +41,31 @@ class Render:
         line_buttons = []
         if show_left:
             if x2:
-                buttonTimeLeftX2 = Button(text="<<",
-                                          command=COMMAND.TIMER_LEFT_X2,
-                                          data=time)
+                buttonTimeLeftX2 = InlineKeyboardButtonExt(text="<<",
+                                                           command=COMMAND.TIMER_LEFT_X2,
+                                                           data=time)
                 line_buttons.append(buttonTimeLeftX2)
-            buttonTimeLeft = Button(text="<",
-                                    command=COMMAND.TIMER_LEFT,
-                                    data=time)
+            buttonTimeLeft = InlineKeyboardButtonExt(text="<",
+                                                     command=COMMAND.TIMER_LEFT,
+                                                     data=time)
             line_buttons.append(buttonTimeLeft)
 
         if show_right:
-            buttonTimeRight = Button(text=">",
-                                     command=COMMAND.TIMER_RIGHT,
-                                     data=time)
+            buttonTimeRight = InlineKeyboardButtonExt(text=">",
+                                                      command=COMMAND.TIMER_RIGHT,
+                                                      data=time)
             line_buttons.append(buttonTimeRight)
             if x2:
-                buttonTimeRightX2 = Button(text=">>",
-                                           command=COMMAND.TIMER_RIGHT_X2,
-                                           data=time)
+                buttonTimeRightX2 = InlineKeyboardButtonExt(text=">>",
+                                                            command=COMMAND.TIMER_RIGHT_X2,
+                                                            data=time)
                 line_buttons.append(buttonTimeRightX2)
 
-        buttonConfirm = Button(text="далее",
-                               command=COMMAND.TIMER_DONE,
-                               data=time)
+        buttonConfirm = InlineKeyboardButtonExt(text="далее",
+                                                command=COMMAND.TIMER_DONE,
+                                                data=time)
 
-        keyboard = ButtonsMenu()
+        keyboard = InlineKeyboardMarkupExt()
         keyboard.add_line(*line_buttons)
         keyboard.add_line(buttonConfirm)
 
@@ -76,7 +76,7 @@ class Render:
 
         text = "Ожидаемое время завершения голосования {}".format(time_str)
 
-        return Message(text, markup=keyboard)
+        return TextMessage(text, reply_markup=keyboard)
 
 
 class TimeStepper:

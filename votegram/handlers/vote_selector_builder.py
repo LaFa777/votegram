@@ -1,13 +1,17 @@
 from ..telegram_utils import (
-    Message,
-    ButtonsMenu,
-    Button,
+    TextMessage,
+    InlineKeyboardMarkupExt,
+    InlineKeyboardButtonExt,
     CallbackQueryHandlerExt,
+    BotProxy,
+    InlineKeyboardButtonExt,
 )
 
 from telegram.ext import (
     CommandHandler,
 )
+
+from telegram import InlineKeyboardMarkup
 
 from ..handlers import (
     ModuleHandler,
@@ -26,14 +30,16 @@ class Render:
     @staticmethod
     def form_builder(builders):
         if not builders:
-            return Message("Отсутствуют сборщики голосований")
+            return TextMessage("Отсутствуют сборщики голосований")
 
-        keyboard = ButtonsMenu()
+        keyboard = InlineKeyboardMarkupExt()
         for obj, desc in builders.items():
             data = obj.__class__.__name__
-            button = Button(desc, COMMAND.SELECT_BUILDER, data)
+            button = InlineKeyboardButtonExt(desc,
+                                             COMMAND.SELECT_BUILDER,
+                                             callback_data=data)
             keyboard.add_line(button)
-        return Message("Выберите тип голосования:", markup=keyboard)
+        return TextMessage("Выберите тип голосования:", reply_markup=keyboard)
 
 
 class VoteSelectorBuilderHandler(ModuleHandler):
@@ -57,19 +63,6 @@ class VoteSelectorBuilderHandler(ModuleHandler):
         handler = CallbackQueryHandlerExt(COMMAND.SELECT_BUILDER, self.select_done)
         dispatcher.add_handler(handler)
 
-    def get_data(self, update):
-        """Возвращает class_name обработав ответ
-        """
-        parser = self._query_serializer
-
-        class_name = ""
-        if update.callback_query:
-            class_name = parser.loads(update.callback_query.data)
-        else:
-            raise NotImplementedError
-
-        return class_name
-
     def add_builder(self, builder, description=None):
         """Добавляем обработчиков типа `ModuleHandler`
         """
@@ -81,16 +74,17 @@ class VoteSelectorBuilderHandler(ModuleHandler):
     def show_selector(self, bot, update):
         """Показывает форму выбора типа сборщика голосования
         """
-        tg_message = self._render\
-            .form_builder(self._builders)\
-            .to_telegram(self._query_serializer)
+        tg_message = self._render.form_builder(self._builders)
 
+        bot = BotProxy(bot, self._query_serializer)
         bot.send_message(chat_id=update.message.chat_id, **tg_message)
 
     def select_done(self, bot, update):
         """Инициирует начало сборки выбранного голосования.
         """
-        class_name = self.get_data(update)
+        print(update.callback_query.data)
+        exit()
+        class_name = update.callback_query.data
 
         for obj in self._builders:
             if class_name == obj.__class__.__name__:

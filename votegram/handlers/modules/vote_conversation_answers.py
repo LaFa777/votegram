@@ -9,7 +9,7 @@ from ...handlers import (
 )
 
 from ...telegram_utils import (
-    Message,
+    TextMessage,
     ConversationHandlerExt,
 )
 
@@ -19,11 +19,11 @@ ANSWER_INPUT = range(1)
 class Render:
     @staticmethod
     def form_start():
-        return Message("Введите свой варинт ответа\nОтправьте /done для окончания ввода.")
+        return TextMessage("Введите свой варинт ответа\nОтправьте /done для окончания ввода.")
 
     @staticmethod
     def form_add_answer():
-        return Message("Ответ успешно добавлен.\nОтправьте /done для окончания ввода.")
+        return TextMessage("Ответ успешно добавлен.\nОтправьте /done для окончания ввода.")
 
 
 class VoteConvesationAnswersHandler(ModuleHandler):
