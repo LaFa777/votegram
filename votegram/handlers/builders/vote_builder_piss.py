@@ -1,14 +1,10 @@
-from ...handlers import (
+from telegram_addons import (
     ComponentHandler,
 )
 
 from ..modules import (
     VoteConversationTimerHandler,
     VoteConvesationAnswersHandler,
-)
-
-from ...telegram_utils import (
-    done_callback,
 )
 
 
@@ -40,7 +36,6 @@ class VoteBuilderPissHandler(ComponentHandler):
         # начинаем с запроса времени истечения голосования
         self._timer_handler.start(bot, update)
 
-    @done_callback
     def timer_done(self, bot, update, data):
         print(bot._callback_data_serializer._salt)
         message = update.effective_message
@@ -52,7 +47,6 @@ class VoteBuilderPissHandler(ComponentHandler):
         # запускаем операцию получения вариантов ответа от пользователя
         self._answers_handler.start(bot, update)
 
-    @done_callback
     def answers_done(self, bot, update, data):
         # TODO: естественно это не выводить надо, а запоминать
         text = "Вы ввели фразы:"

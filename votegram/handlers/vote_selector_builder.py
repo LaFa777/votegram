@@ -2,14 +2,11 @@ from telegram.ext import (
     CommandHandler,
 )
 
-from ..telegram_utils import (
+from telegram_addons import (
     CallbackQueryHandlerExt,
     InlineKeyboardMarkupExt,
     InlineKeyboardButtonExt,
     TextMessage,
-)
-
-from ..handlers import (
     ComponentHandler,
 )
 

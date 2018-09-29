@@ -4,11 +4,8 @@ from telegram.ext import (
     Filters,
 )
 
-from ...handlers import (
+from telegram_addons import (
     ComponentHandler,
-)
-
-from ...telegram_utils import (
     TextMessage,
     ConversationHandlerExt,
 )
@@ -43,7 +40,6 @@ class VoteConvesationAnswersHandler(ComponentHandler):
     def bind_handlers(self, dispatcher):
         # TODO: заменить на AnyTextInputHandler ???
         self._conv_handler = ConversationHandlerExt(
-            entry_points=[],
             states={
                 ANSWER_INPUT: [MessageHandler(Filters.text, self.answers_add)],
             },
@@ -52,7 +48,6 @@ class VoteConvesationAnswersHandler(ComponentHandler):
         dispatcher.add_handler(self._conv_handler)
 
     def _start(self, bot, update):
-        # инициируем вход(entry_points) в ConversationHandler
         self._conv_handler.set_state(update, ANSWER_INPUT)
         self.answers_start(bot, update)
 
@@ -60,14 +55,13 @@ class VoteConvesationAnswersHandler(ComponentHandler):
         """Показывает сообщение о вводе или /done для отмены
         """
         tg_message = Render().form_start()
-        bot.send_message(chat_id=update.effective_message.chat_id,
-                         **tg_message)
+        update.effective_message.reply_text(**tg_message)
 
         return ANSWER_INPUT
 
     def answers_add(self, bot, update):
         tg_message = Render().form_add_answer()
-        bot.send_message(chat_id=update.message.chat_id, **tg_message)
+        update.message.reply_text(**tg_message)
 
     def answers_done(self, bot, update):
         # parser = self._query_parser
@@ -76,4 +70,4 @@ class VoteConvesationAnswersHandler(ComponentHandler):
         answers = ["За", "глу", "шка"]
 
         # передаем данные слушателю
-        self._notify(bot, update, answers)
+        self.notify(bot, update, answers)

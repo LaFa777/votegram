@@ -1,11 +1,10 @@
 from .handlers import (
     DefaultHandler,
     VoteSelectorBuilderHandler,
-    VoteBuilderPissHandler,
 )
 
-from .telegram_utils import (
-    DispatcherProxy,
+from .handlers.builders import (
+    VoteBuilderPissHandler,
 )
 
 # from .vote_managers import VoteManagerMemory

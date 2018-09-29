@@ -1,24 +1,10 @@
-import copy
-
 import arrow
 
-from telegram.error import (
-    BadRequest,
-)
-
-from telegram.ext import (
-    CallbackQueryHandler,
-    #    CommandHandler,
-)
-
-from ...handlers import (
+from telegram_addons import (
     ComponentHandler,
-)
-
-from ...telegram_utils import (
+    TextMessage,
     InlineKeyboardButtonExt,
     InlineKeyboardMarkupExt,
-    TextMessage,
     CallbackQueryHandlerExt,
 )
 
@@ -34,6 +20,9 @@ class COMMAND:
 
 
 class Render:
+
+    # TODO: добавить def get_description, get_done
+    # TODO: или get_text который возвращает дикт с переводом
 
     @staticmethod
     def form_timer(time, show_left=True, show_right=True, x2=False):
@@ -236,4 +225,4 @@ class VoteConversationTimerHandler(ComponentHandler):
         time = update.callback_query.data
 
         # передаем данные слушателю
-        self._notify(bot, update, time)
+        self.notify(bot, update, time)

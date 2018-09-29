@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler
 
-from ..handlers import SimpleHandler
+from telegram_addons import SimpleHandler
 
 
 class DefaultHandler(SimpleHandler):
