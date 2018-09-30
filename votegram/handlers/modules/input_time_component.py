@@ -152,6 +152,12 @@ class TimeStepper:
         else:
             return False
 
+    def in_range(self, time):
+        low = self._TIME_STEPS[0]
+        max = self._TIME_STEPS[-1]
+
+        return (low < time < max)
+
 
 TEXT_INPUT = range(1)
 
@@ -252,11 +258,15 @@ class InputTimeComponent(ComponentHandler):
         if not parse_time:
             tg_message = self._render.message_input_parse_error()
             update.message.reply_text(**tg_message)
-            return
+            return TEXT_INPUT
 
         seconds = (parse_time - time_now).total_seconds()
 
         # TODO: проверять в time_steppere на принадлежность к диапозону
+        # if self._time_stepper.in_range(seconds):
+        #   tg_message = self._render.message_input_parse_range_error()
+        #   update.message.reply_text(**tg_message)
+        #   return TEXT_INPUT
 
         self.notify(bot, update, seconds)
 
