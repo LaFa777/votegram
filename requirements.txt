@@ -2,3 +2,4 @@ python-telegram-bot
 python-telegram-bot-addons
 Pillow
 arrow
+rutimeparser

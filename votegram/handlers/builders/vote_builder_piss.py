@@ -3,7 +3,7 @@ from telegram_addons import (
 )
 
 from ..modules import (
-    VoteConversationTimerHandler,
+    InputTimeComponent,
     VoteConvesationAnswersHandler,
 )
 
@@ -23,7 +23,7 @@ class VoteBuilderPissHandler(ComponentHandler):
     def __init__(self, dispatcher):
         namespace = self.__class__.__name__
 
-        self._timer_handler = VoteConversationTimerHandler(namespace + ".timer", dispatcher)
+        self._timer_handler = InputTimeComponent(namespace, dispatcher)
         self._answers_handler = VoteConvesationAnswersHandler(namespace + ".answers", dispatcher)
 
         super().__init__(namespace, dispatcher)
@@ -37,7 +37,6 @@ class VoteBuilderPissHandler(ComponentHandler):
         self._timer_handler.start(bot, update)
 
     def timer_done(self, bot, update, data):
-        print(bot._callback_data_serializer._salt)
         message = update.effective_message
 
         # TODO: естественно это не выводить надо, а запоминать

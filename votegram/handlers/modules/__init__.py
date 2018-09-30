@@ -1,2 +1,2 @@
-from .vote_conversation_timer import VoteConversationTimerHandler
+from .input_time_component import InputTimeComponent
 from .vote_conversation_answers import VoteConvesationAnswersHandler

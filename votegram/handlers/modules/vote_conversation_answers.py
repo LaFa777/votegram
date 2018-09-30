@@ -2,6 +2,7 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     Filters,
+    ConversationHandler,
 )
 
 from telegram_addons import (
@@ -71,3 +72,5 @@ class VoteConvesationAnswersHandler(ComponentHandler):
 
         # передаем данные слушателю
         self.notify(bot, update, answers)
+
+        return ConversationHandler.END
