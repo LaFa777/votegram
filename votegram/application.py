@@ -1,11 +1,11 @@
 from .handlers import (
     DefaultHandler,
-    VoteSelectorBuilderHandler,
+    VoteSelectBuilderHandler,
 )
 
 from .handlers.builders import (
-    VoteBuilderPissHandler,
-    VoteBuilderSelectorHandler,
+    VoteBuilderDefault,
+    VoteBuilderSelector,
 )
 
 # from .vote_managers import VoteManagerMemory
@@ -22,11 +22,9 @@ class Application:
 
         DefaultHandler(dispatcher)
 
-        voteBuilder = VoteSelectorBuilderHandler(dispatcher)
-        voteBuilder.add_builder(VoteBuilderPissHandler(dispatcher),
-                                description="Писс")
-        voteBuilder.add_builder(VoteBuilderSelectorHandler(dispatcher),
-                                description="Селектор")
+        voteBuilder = VoteSelectBuilderHandler(dispatcher)
+        voteBuilder.add_builder(VoteBuilderDefault(dispatcher))
+        voteBuilder.add_builder(VoteBuilderSelector(dispatcher))
 
         # Start the Bot
         self.updater.start_polling()

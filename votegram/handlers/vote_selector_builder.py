@@ -35,7 +35,7 @@ class Render:
         return TextMessage("Выберите тип голосования:", reply_markup=keyboard)
 
 
-class VoteSelectorBuilderHandler(ComponentHandler):
+class VoteSelectBuilderHandler(ComponentHandler):
 
     def __init__(self, dispatcher, render=None):
         self._builders = {}
@@ -53,10 +53,7 @@ class VoteSelectorBuilderHandler(ComponentHandler):
     def add_builder(self, builder, description=None):
         """Добавляем обработчиков типа `ModuleHandler`
         """
-        if description is None:
-            description = "No description"
-
-        self._builders[builder] = description
+        self._builders[builder] = builder.description()
 
     def show_selector(self, bot, update):
         """Показывает форму выбора типа сборщика голосования
@@ -73,6 +70,7 @@ class VoteSelectorBuilderHandler(ComponentHandler):
         for obj in self._builders:
             if class_name == obj.__class__.__name__:
                 obj.start(bot, update)
+                update.effective_message.delete()
                 return
 
     # TODO: добавить обработку когда закончится сборка Vote (пока нет смысла)

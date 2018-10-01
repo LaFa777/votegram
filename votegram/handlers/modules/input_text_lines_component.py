@@ -27,6 +27,9 @@ ANSWER_INPUT = range(1)
 class InputTextLinesComponent(ComponentHandler):
     """Запрашивает у пользователя варианты ответа. В data возвращает массив
     строк введенных пользователем (1 на каждое сообщение).
+
+    Todo:
+        добавить возможно удалять варианты ответа?
     """
 
     def __init__(self, component_name, dispatcher, limit_lines=5, render=None):

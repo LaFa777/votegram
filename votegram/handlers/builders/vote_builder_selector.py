@@ -1,13 +1,11 @@
-from telegram_addons import (
-    ComponentHandler,
-)
+from .core import VoteBuilder
 
 from ..modules import (
     SelectVariantComponent,
 )
 
 
-class VoteBuilderSelectorHandler(ComponentHandler):
+class VoteBuilderSelector(VoteBuilder):
 
     def __init__(self, dispatcher):
         namespace = self.__class__.__name__
@@ -22,6 +20,9 @@ class VoteBuilderSelectorHandler(ComponentHandler):
 
     def _start(self, bot, update):
         self._selector_handler.start(bot, update)
+
+    def description(self):
+        return "Селектор"
 
     def selector_done(self, bot, update, variant):
         update.effective_message.reply_text("Ты выбрал вариант: {}".format(variant))
