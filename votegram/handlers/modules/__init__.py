@@ -1,2 +1,2 @@
 from .input_time_component import InputTimeComponent
-from .vote_conversation_answers import VoteConvesationAnswersHandler
+from .input_text_lines_component import InputTextLinesComponent

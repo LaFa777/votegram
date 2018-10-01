@@ -4,7 +4,7 @@ from telegram_addons import (
 
 from ..modules import (
     InputTimeComponent,
-    VoteConvesationAnswersHandler,
+    InputTextLinesComponent,
 )
 
 
@@ -24,7 +24,7 @@ class VoteBuilderPissHandler(ComponentHandler):
         namespace = self.__class__.__name__
 
         self._timer_handler = InputTimeComponent(namespace, dispatcher)
-        self._answers_handler = VoteConvesationAnswersHandler(namespace + ".answers", dispatcher)
+        self._answers_handler = InputTextLinesComponent(namespace, dispatcher)
 
         super().__init__(namespace, dispatcher)
 
