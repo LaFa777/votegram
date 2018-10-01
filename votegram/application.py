@@ -5,6 +5,7 @@ from .handlers import (
 
 from .handlers.builders import (
     VoteBuilderPissHandler,
+    VoteBuilderSelectorHandler,
 )
 
 # from .vote_managers import VoteManagerMemory
@@ -24,6 +25,8 @@ class Application:
         voteBuilder = VoteSelectorBuilderHandler(dispatcher)
         voteBuilder.add_builder(VoteBuilderPissHandler(dispatcher),
                                 description="Писс")
+        voteBuilder.add_builder(VoteBuilderSelectorHandler(dispatcher),
+                                description="Селектор")
 
         # Start the Bot
         self.updater.start_polling()

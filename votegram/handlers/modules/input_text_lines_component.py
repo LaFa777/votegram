@@ -11,8 +11,6 @@ from telegram_addons import (
     ConversationHandlerExt,
 )
 
-ANSWER_INPUT = range(1)
-
 
 class InputTextLinesRender:
     def form_start(self):
@@ -29,9 +27,6 @@ ANSWER_INPUT = range(1)
 class InputTextLinesComponent(ComponentHandler):
     """Запрашивает у пользователя варианты ответа. В data возвращает массив
     строк введенных пользователем (1 на каждое сообщение).
-
-    Todo:
-      ограничение по количеству добавляемых ответов
     """
 
     def __init__(self, component_name, dispatcher, limit_lines=5, render=None):

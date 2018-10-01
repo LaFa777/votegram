@@ -1,2 +1,3 @@
 from .input_time_component import InputTimeComponent
 from .input_text_lines_component import InputTextLinesComponent
+from .select_variant_component import SelectVariantComponent

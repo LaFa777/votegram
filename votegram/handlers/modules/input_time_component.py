@@ -17,8 +17,6 @@ from telegram_addons import (
     ConversationHandlerExt,
 )
 
-__all__ = ("VoteConversationTimer")
-
 
 class COMMAND:
     TIMER_LEFT = "TIMER.LEFT"
@@ -176,9 +174,6 @@ class InputTimeComponent(ComponentHandler):
         super().__init__(component_name, dispatcher)
 
     def bind_handlers(self, dispatcher):
-        # TODO: используя https://github.com/orsinium/rutimeparser предложить ввод даты пользователю
-        # ну то есть добавить кнопку для ручного ввода даты
-
         handler = CallbackQueryHandlerExt(callback=self.timer_show, pass_user_data=True)
         dispatcher.add_handler(handler)
 
@@ -232,7 +227,7 @@ class InputTimeComponent(ComponentHandler):
 
         # отправляем сообщение
         if replace_message:
-                message.edit_text(**tg_message)
+            message.edit_text(**tg_message)
         else:
             message.reply_text(**tg_message)
 
