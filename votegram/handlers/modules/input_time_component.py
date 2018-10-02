@@ -164,12 +164,12 @@ class InputTimeComponent(ComponentHandler):
     """Компонент для ввода времени
     """
 
-    def __init__(self, namespace, dispatcher, render=None, time_stepper=None):
+    def __init__(self, component_name, dispatcher, render=None, time_stepper=None):
         self._time_stepper = time_stepper or TimeStepper()
         self._render = render or InputTimeRender()
         self._conv_handler = None
 
-        component_name = namespace + "_input_time"
+        component_name = component_name + "_input_time"
 
         super().__init__(component_name, dispatcher)
 

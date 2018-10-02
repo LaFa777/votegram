@@ -13,14 +13,29 @@ class DefaultSelectVariantRender(SelectVariantRender):
         return "Тип голосования:"
 
 
+class VariantPublicity:
+    anonymous = "Анонимное"
+    public = "Публичное"
+
+    @classmethod
+    def list(cls):
+        arr = list()
+        for attribute in cls.__dict__.keys():
+            if attribute[:2] != '__':
+                value = getattr(cls, attribute)
+                if not callable(value):
+                    arr.append(value)
+        return arr
+
+
 class VoteBuilderDefault(VoteBuilder):
     """Собирает обычное голосование с выбором варианта ответа.
     """
 
-    def __init__(self, dispatcher):
-        namespace = self.__class__.__name__
+    def __init__(self, component_name, dispatcher):
+        namespace = component_name + "." + self.__class__.__name__
 
-        variants = ["Анонимное", "Публичное"]
+        variants = VariantPublicity.list()
         self._selector_component = SelectVariantComponent(namespace,
                                                           dispatcher,
                                                           variants,
@@ -30,27 +45,23 @@ class VoteBuilderDefault(VoteBuilder):
         super().__init__(namespace, dispatcher)
 
     def bind_handlers(self, dispatcher):
-        self._selector_component.add_done_callback(self.selector_done)
-        self._answers_component.add_done_callback(self.answers_done)
+        self._selector_component.add_done_callback(self.selector_done, pass_user_data=True)
+        self._answers_component.add_done_callback(self.answers_done, pass_user_data=True)
 
     def _start(self, bot, update):
-        # коментарий
         self._selector_component.start(bot, update)
 
     def description(self):
         return "Обычное"
 
-    def selector_done(self, bot, update, data):
-        # TODO: естественно это не выводить надо, а запоминать
-        update.effective_message.reply_text("Публичность: {}".format(data))
+    def selector_done(self, bot, update, data, user_data):
+        vote_data = user_data[self._component_name] = {}
+        vote_data["publicity"] = data
 
-        # запускаем операцию получения вариантов ответа от пользователя
         self._answers_component.start(bot, update)
 
-    def answers_done(self, bot, update, data):
-        # TODO: естественно это не выводить надо, а запоминать
-        text = "Варианты ответа:"
-        for answer in data:
-            text = text + "\n" + answer
+    def answers_done(self, bot, update, data, user_data):
+        vote_data = user_data[self._component_name]
+        vote_data["answers"] = data
 
-        update.effective_message.reply_text(text)
+        self.notify(bot, update, vote_data)

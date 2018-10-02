@@ -36,6 +36,9 @@ class InputTextLinesComponent(ComponentHandler):
         self._conv_handler = None
         self._render = render or InputTextLinesRender()
         self._limit_lines = limit_lines
+
+        component_name = component_name + "_input_lines"
+
         super().__init__(component_name, dispatcher)
 
     def bind_handlers(self, dispatcher):

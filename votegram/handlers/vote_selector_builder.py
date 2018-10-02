@@ -53,6 +53,8 @@ class VoteSelectBuilderHandler(ComponentHandler):
     def add_builder(self, builder, description=None):
         """Добавляем обработчиков типа `ModuleHandler`
         """
+        builder.add_done_callback(self.building_done)
+
         self._builders[builder] = builder.description()
 
     def show_selector(self, bot, update):
@@ -73,4 +75,6 @@ class VoteSelectBuilderHandler(ComponentHandler):
                 update.effective_message.delete()
                 return
 
-    # TODO: добавить обработку когда закончится сборка Vote (пока нет смысла)
+    def building_done(self, bot, update, data):
+        update.effective_message.reply_text("Голосования успешно создано")
+        print(data)

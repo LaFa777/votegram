@@ -33,6 +33,9 @@ class SelectVariantComponent(ComponentHandler):
     def __init__(self, component_name, dispatcher, variants, render=None):
         self._render = render or SelectVariantRender()
         self._variants = variants
+
+        component_name = component_name + "_select_variant"
+
         super().__init__(component_name, dispatcher)
 
     def bind_handlers(self, dispatcher):

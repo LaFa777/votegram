@@ -12,13 +12,16 @@ if __name__ == "__main__":
         level=logging.INFO)
 
     # Create the Updater and pass it your bot's token.
-    updater = Updater(settings.TOKEN, request_kwargs={
-        "proxy_url": settings.SOCKS_URL,
-        "urllib3_proxy_kwargs": {
-            'username': settings.SOCKS_USER,
-            'password': settings.SOCKS_PASS,
+    if settings.SOCKS_URL:
+        updater = Updater(settings.TOKEN, request_kwargs={
+            "proxy_url": settings.SOCKS_URL,
+            "urllib3_proxy_kwargs": {
+                'username': settings.SOCKS_USER,
+                'password': settings.SOCKS_PASS,
             },
         })
+    else:
+        updater = Updater(settings.TOKEN)
 
     app = Application(updater)
     app.run()
